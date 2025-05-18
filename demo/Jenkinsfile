@@ -93,6 +93,11 @@ pipeline {
                 }
             }
         }
+        stage('Debug Path') {
+            steps {
+                sh 'echo "PATH en Jenkins: $PATH"'
+            }
+        }
     }
 
     // Acciones a realizar después de que todas las etapas se hayan completado.
