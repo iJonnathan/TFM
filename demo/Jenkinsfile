@@ -15,20 +15,27 @@ pipeline {
     // Define las etapas del pipeline. Cada etapa es una fase lógica del proceso CI/CD.
     stages {
         // Etapa 1: Checkout - Obtener el código fuente desde el repositorio SCM.
+        // Jenkins se encarga de esto automáticamente. El workspace inicial será la raíz del repositorio.
         stage('Checkout') {
             steps {
                 echo '>>> Stage: Checkout - Obteniendo el código fuente desde SCM...'
-                // Jenkins se encarga de esto automáticamente.
+                // Jenkins se encargará de clonar el repositorio en el workspace.
+                // El directorio de trabajo actual será la raíz del repositorio (donde está el README).
             }
         }
 
         // Etapa 2: Build - Compilar el código y empaquetar la aplicación con Maven.
-        // Esto incluye la ejecución de pruebas unitarias.
         stage('Build') {
             steps {
                 echo '>>> Stage: Build - Compilando y empaquetando con Maven...'
-                // Ejecuta el comando Maven para limpiar, compilar, ejecutar pruebas y crear el JAR ejecutable.
-                sh 'mvn clean package'
+                // **CAMBIO CLAVE:** Usamos el paso 'dir' para cambiar el directorio de trabajo
+                // al subdirectorio 'demo/' donde se encuentra el pom.xml.
+                dir('demo') {
+                    // Ahora, ejecutamos el comando Maven desde dentro del directorio 'demo/'.
+                    // Esto limpia, compila el código, ejecuta las pruebas unitarias y crea el JAR
+                    // ejecutable en 'demo/target/'.
+                    sh 'mvn clean package'
+                }
             }
         }
 
@@ -36,24 +43,32 @@ pipeline {
         stage('Unit Test Reports') {
             steps {
                 echo '>>> Stage: Unit Test Reports - Publicando resultados de pruebas unitarias...'
-                // Publica los resultados de las pruebas JUnit generados por Maven.
-                junit 'target/surefire-reports/*.xml'
+                // Los reportes de pruebas están en 'demo/target/surefire-reports/'.
+                // La ruta es relativa a la raíz del workspace de Jenkins.
+                junit 'demo/target/surefire-reports/*.xml'
             }
         }
 
         // Etapa 4: Build Docker Image - Construir la imagen Docker de la aplicación.
-        // Utiliza el Dockerfile y el JAR generado en la etapa 'Build'.
         stage('Build Docker Image') {
             steps {
                 echo '>>> Stage: Build Docker Image - Construyendo la imagen Docker...'
-                // Construye la imagen Docker taggeada como 'microservicio-bienvenida'.
-                sh 'docker build -t microservicio-bienvenida .'
+                // El comando 'docker build' necesita el contexto de construcción (donde buscar el Dockerfile
+                // y los archivos a copiar). El Dockerfile está en la raíz del repositorio (../Dockerfile
+                // relativo a demo/target donde está el JAR), pero el contexto debe ser la raíz del repo
+                // para que el Dockerfile pueda copiar demo/target/bienvenida-0.0.1-SNAPSHOT.jar
+                // Para simplificar, ejecutamos docker build desde la raíz del workspace
+                // y especificamos el Dockerfile que está en la raíz.
+                 sh 'docker build -f Dockerfile -t microservicio-bienvenida .'
+                 // -f Dockerfile: especifica que el Dockerfile a usar está en la raíz del contexto (.).
+                 // .: el contexto de construcción es el directorio actual (raíz del workspace).
+                 // El Dockerfile ahora busca el JAR en demo/target/ gracias al ARG DEPENDENCY=demo/target
             }
         }
 
         // Etapa 5: Local Deploy - Desplegar el microservicio localmente como un contenedor Docker.
         // Detiene y elimina el contenedor anterior si existe, y luego inicia uno nuevo.
-        // AJUSTE DE PUERTOS AQUÍ: Mapear el puerto 9090 del contenedor al 8081 del host.
+        // Mapear el puerto 9090 del contenedor al 8081 del host.
         stage('Local Deploy') {
             steps {
                 echo '>>> Stage: Local Deploy - Desplegando localmente con Docker...'
@@ -69,7 +84,7 @@ pipeline {
                 // --name microservicio-bienvenida: Asigna un nombre al contenedor.
                 // microservicio-bienvenida: El nombre de la imagen Docker a usar.
                 sh 'docker run -d -p 8081:9090 --name microservicio-bienvenida microservicio-bienvenida'
-                echo '>>> El microservicio debería estar accesible en http://localhost:8081/api/welcome'
+                echo '>>> El microservicio debería estar accesible localmente en http://localhost:8081/api/welcome'
                 echo '>>> Verifica los logs del contenedor con: docker logs microservicio-bienvenida'
             }
         }
@@ -80,14 +95,17 @@ pipeline {
         always {
             echo '>>> Pipeline finalizado.'
         }
+        // Acciones si el pipeline fue exitoso (todas las etapas pasaron).
         success {
             echo '>>> ¡Pipeline ejecutado con éxito! El microservicio está desplegado localmente en el puerto 8081.'
         }
+        // Acciones si alguna etapa falló.
         failure {
-            echo '>>> El pipeline falló. Revisa los logs de la consola.'
+            echo '>>> El pipeline falló. Revisa los logs de la consola para identificar el problema.'
         }
+        // Se ejecuta si el pipeline terminó como inestable (ej: pruebas fallaron).
          unstable {
-            echo '>>> El pipeline terminó como inestable (ej: pruebas fallaron).'
+            echo '>>> El pipeline terminó como inestable (ej: algunas pruebas fallaron).'
         }
     }
 }
