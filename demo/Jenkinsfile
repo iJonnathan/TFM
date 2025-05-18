@@ -28,7 +28,7 @@ pipeline {
             steps {
                 echo '>>> Stage: Build - Compilando y empaquetando con Maven...'
                 // Ejecuta el comando Maven para limpiar, compilar, ejecutar pruebas y crear el JAR ejecutable.
-                sh 'mvn clean package'
+                sh 'pwd;mvn clean package'
             }
         }
 
