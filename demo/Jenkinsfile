@@ -59,7 +59,7 @@ pipeline {
                 // para que el Dockerfile pueda copiar demo/target/bienvenida-0.0.1-SNAPSHOT.jar
                 // Para simplificar, ejecutamos docker build desde la raíz del workspace
                 // y especificamos el Dockerfile que está en la raíz.
-                 sh 'docker build -f Dockerfile -t microservicio-bienvenida .'
+                 sh 'pwd; docker build -f Dockerfile -t microservicio-bienvenida .'
                  // -f Dockerfile: especifica que el Dockerfile a usar está en la raíz del contexto (.).
                  // .: el contexto de construcción es el directorio actual (raíz del workspace).
                  // El Dockerfile ahora busca el JAR en demo/target/ gracias al ARG DEPENDENCY=demo/target
