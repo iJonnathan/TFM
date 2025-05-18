@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 public class WelcomeController {
     @GetMapping("/api/welcome")
-    public WelcomeDTO welcome(@RequestParam(value = "name", defaultValue = "Mundo") String name) {
+    public WelcomeDTO welcome(@RequestParam(value = "name", defaultValue = "...") String name) {
         return new WelcomeDTO("Hola, " + name + "!");
     }
 }
