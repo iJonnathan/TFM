@@ -29,6 +29,6 @@ public class WelcomeControllerTests {
 		mockMvc.perform(get("/api/welcome").param("name", "Juan")) // Petición GET con parámetro 'name'
 				.andExpect(status().isOk())
 				.andExpect(content().contentType("application/json"))
-				.andExpect(jsonPath("$.message").value("Hola, Juan, esto es un demo")); // Verifica el mensaje con el nombre personalizado
+				.andExpect(jsonPath("$.message").value("Hola, bienvenido Juan, esto es un demo")); // Verifica el mensaje con el nombre personalizado
 	}
 }
