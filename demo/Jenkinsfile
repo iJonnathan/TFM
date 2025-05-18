@@ -59,10 +59,13 @@ pipeline {
                 // para que el Dockerfile pueda copiar demo/target/bienvenida-0.0.1-SNAPSHOT.jar
                 // Para simplificar, ejecutamos docker build desde la raíz del workspace
                 // y especificamos el Dockerfile que está en la raíz.
-                 sh 'pwd; docker build -f Dockerfile -t microservicio-bienvenida .'
-                 // -f Dockerfile: especifica que el Dockerfile a usar está en la raíz del contexto (.).
-                 // .: el contexto de construcción es el directorio actual (raíz del workspace).
-                 // El Dockerfile ahora busca el JAR en demo/target/ gracias al ARG DEPENDENCY=demo/target
+                dir('demo') {
+                    sh 'pwd; docker build -f Dockerfile -t microservicio-bienvenida .'
+                     // -f Dockerfile: especifica que el Dockerfile a usar está en la raíz del contexto (.).
+                     // .: el contexto de construcción es el directorio actual (raíz del workspace).
+                     // El Dockerfile ahora busca el JAR en demo/target/ gracias al ARG DEPENDENCY=demo/target
+                }
+
             }
         }
 
@@ -72,20 +75,22 @@ pipeline {
         stage('Local Deploy') {
             steps {
                 echo '>>> Stage: Local Deploy - Desplegando localmente con Docker...'
+                dir('demo') {
                 // Detiene y elimina el contenedor Docker existente (si lo hay).
-                sh 'docker stop microservicio-bienvenida || true'
-                sh 'docker rm microservicio-bienvenida || true'
+                    sh 'docker stop microservicio-bienvenida || true'
+                    sh 'docker rm microservicio-bienvenida || true'
 
-                // Ejecuta un nuevo contenedor Docker.
-                // -d: detached mode (segundo plano).
-                // -p 8081:9090: Mapea el puerto 9090 INTERNO del contenedor
-                //                (donde la app Spring Boot escucha según application.properties)
-                //                al puerto 8081 EXTERNO en la máquina host de Jenkins.
-                // --name microservicio-bienvenida: Asigna un nombre al contenedor.
-                // microservicio-bienvenida: El nombre de la imagen Docker a usar.
-                sh 'docker run -d -p 8081:9090 --name microservicio-bienvenida microservicio-bienvenida'
-                echo '>>> El microservicio debería estar accesible localmente en http://localhost:8081/api/welcome'
-                echo '>>> Verifica los logs del contenedor con: docker logs microservicio-bienvenida'
+                    // Ejecuta un nuevo contenedor Docker.
+                    // -d: detached mode (segundo plano).
+                    // -p 8081:9090: Mapea el puerto 9090 INTERNO del contenedor
+                    //                (donde la app Spring Boot escucha según application.properties)
+                    //                al puerto 8081 EXTERNO en la máquina host de Jenkins.
+                    // --name microservicio-bienvenida: Asigna un nombre al contenedor.
+                    // microservicio-bienvenida: El nombre de la imagen Docker a usar.
+                    sh 'docker run -d -p 8081:9090 --name microservicio-bienvenida microservicio-bienvenida'
+                    echo '>>> El microservicio debería estar accesible localmente en http://localhost:8081/api/welcome'
+                    echo '>>> Verifica los logs del contenedor con: docker logs microservicio-bienvenida'
+                }
             }
         }
     }
