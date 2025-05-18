@@ -48,6 +48,11 @@ pipeline {
                 junit 'demo/target/surefire-reports/*.xml'
             }
         }
+        stage('Debug Path') {
+            steps {
+                sh 'echo "PATH en Jenkins: $PATH"'
+            }
+        }
 
         // Etapa 4: Build Docker Image - Construir la imagen Docker de la aplicación.
         stage('Build Docker Image') {
@@ -93,11 +98,7 @@ pipeline {
                 }
             }
         }
-        stage('Debug Path') {
-            steps {
-                sh 'echo "PATH en Jenkins: $PATH"'
-            }
-        }
+
     }
 
     // Acciones a realizar después de que todas las etapas se hayan completado.
