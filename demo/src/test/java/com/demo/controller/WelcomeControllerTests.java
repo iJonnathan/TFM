@@ -21,7 +21,7 @@ public class WelcomeControllerTests {
 		mockMvc.perform(get("/api/welcome")) // Realiza una petición GET a /api/welcome
 				.andExpect(status().isOk()) // Espera un estado HTTP 200 OK
 				.andExpect(content().contentType("application/json")) // Espera que el contenido sea JSON
-				.andExpect(jsonPath("$.message").value("Hola, Mundo!")); // Verifica el valor del campo 'message' en el JSON
+				.andExpect(jsonPath("$.message").value("Hola, bienvenido ..., esto es un demo")); // Verifica el valor del campo 'message' en el JSON
 	}
 
 	@Test // Otra prueba unitaria
