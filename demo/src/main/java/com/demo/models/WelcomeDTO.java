@@ -6,7 +6,6 @@ public class WelcomeDTO {
         this.message = message;
     }
 
-    // Getters y Setters
     public String getMessage() {
         return message;
     }
