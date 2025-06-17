@@ -1,5 +1,6 @@
 // Define el pipeline usando sintaxis Declarativa
 pipeline {
+    // new line
     // Define dónde se ejecutará este pipeline.
     // 'agent any' significa que Jenkins asignará este pipeline a cualquier agente disponible.
     agent any
