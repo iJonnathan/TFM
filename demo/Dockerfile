@@ -12,7 +12,7 @@ VOLUME /tmp
 # La ruta 'demo/target/demo-0.0.1-SNAPSHOT.jar' es relativa al contexto de construcción (.).
 COPY ${DEPENDENCY}/demo-0.0.1-SNAPSHOT.jar app.jar
 
-# Exponer el puerto en el que la aplicación Spring Boot escuchará.
+# Exponer el puerto en el que la aplicación Spring Boot escuchará
 EXPOSE 9090
 
 # Punto de entrada para ejecutar la aplicación.
