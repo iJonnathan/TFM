@@ -1,27 +1,26 @@
 // Define el pipeline usando sintaxis Declarativa
 pipeline {
-    // new line
     // Define dónde se ejecutará este pipeline.
     // 'agent any' significa que Jenkins asignará este pipeline a cualquier agente disponible.
     agent any
 
-    // Declara las herramientas necesarias. Jenkins las instalará o las usará si ya están configuradas.
-    // Asegúrate de que estos nombres ('M3', 'JDK-17') coincidan con la configuración de herramientas globales en Jenkins.
+    // Declara las herramientas necesarias. Asegúrate de que estos nombres
+    // ('M3', 'JDK-17') coincidan con la configuración de herramientas globales en Jenkins.
     tools {
         maven 'M3'     // Herramienta Maven configurada en Jenkins
         jdk 'JDK-17'   // Herramienta JDK configurada en Jenkins
-        // La herramienta Docker usualmente se asume disponible en el agente.
     }
 
     // Define las etapas del pipeline. Cada etapa es una fase lógica del proceso CI/CD.
     stages {
         // Etapa 1: Checkout - Obtener el código fuente desde el repositorio SCM.
-        // Jenkins se encarga de esto automáticamente. El workspace inicial será la raíz del repositorio.
+        // Jenkins se encarga de esto automáticamente al inicio del pipeline
+        // y el workspace se establece en la raíz del repositorio (TFM/).
         stage('Checkout') {
             steps {
                 echo '>>> Stage: Checkout - Obteniendo el código fuente desde SCM...'
-                // Jenkins se encargará de clonar el repositorio en el workspace.
-                // El directorio de trabajo actual será la raíz del repositorio (donde está el README).
+                // El workspace inicial ya es la raíz del repositorio (TFM/).
+                // Puedes verificarlo con sh 'pwd'
             }
         }
 
@@ -29,8 +28,8 @@ pipeline {
         stage('Build') {
             steps {
                 echo '>>> Stage: Build - Compilando y empaquetando con Maven...'
-                // **CAMBIO CLAVE:** Usamos el paso 'dir' para cambiar el directorio de trabajo
-                // al subdirectorio 'demo/' donde se encuentra el pom.xml.
+                // **CAMBIO CRÍTICO:** Usamos 'dir' para movernos al subdirectorio 'demo'
+                // donde se encuentra el pom.xml de tu aplicación Maven.
                 dir('demo') {
                     // Ahora, ejecutamos el comando Maven desde dentro del directorio 'demo/'.
                     // Esto limpia, compila el código, ejecuta las pruebas unitarias y crea el JAR
@@ -40,66 +39,62 @@ pipeline {
             }
         }
 
-        // Etapa 3: Test Reports - Publicar los resultados de las pruebas unitarias.
+        // Etapa 3: Unit Test Reports - Publicar los resultados de las pruebas unitarias.
         stage('Unit Test Reports') {
             steps {
                 echo '>>> Stage: Unit Test Reports - Publicando resultados de pruebas unitarias...'
                 // Los reportes de pruebas están en 'demo/target/surefire-reports/'.
-                // La ruta es relativa a la raíz del workspace de Jenkins.
+                // La ruta es relativa a la raíz del workspace de Jenkins (TFM/).
                 junit 'demo/target/surefire-reports/*.xml'
             }
         }
+
+        // Etapa 4: Debug Path - Paso opcional para depuración
         stage('Debug Path') {
             steps {
                 sh 'echo "PATH en Jenkins: $PATH"'
+                sh 'echo "Contenido del workspace (profundidad 2):"'
+                sh 'ls -R -d */* | head -n 20' // Muestra directorios y archivos hasta 2 niveles de profundidad
+                sh 'echo "Contenido de demo/target:"'
+                sh 'ls demo/target/' // Para ver el JAR generado
             }
         }
 
-        // Etapa 4: Build Docker Image - Construir la imagen Docker de la aplicación.
+        // Etapa 5: Build Docker Image - Construir la imagen Docker de la aplicación.
         stage('Build Docker Image') {
             steps {
                 echo '>>> Stage: Build Docker Image - Construyendo la imagen Docker...'
-                // El comando 'docker build' necesita el contexto de construcción (donde buscar el Dockerfile
-                // y los archivos a copiar). El Dockerfile está en la raíz del repositorio (../Dockerfile
-                // relativo a demo/target donde está el JAR), pero el contexto debe ser la raíz del repo
-                // para que el Dockerfile pueda copiar demo/target/bienvenida-0.0.1-SNAPSHOT.jar
-                // Para simplificar, ejecutamos docker build desde la raíz del workspace
-                // y especificamos el Dockerfile que está en la raíz.
-                dir('demo') {
-                    sh 'pwd; docker build -f Dockerfile -t microservicio-bienvenida .'
-                     // -f Dockerfile: especifica que el Dockerfile a usar está en la raíz del contexto (.).
-                     // .: el contexto de construcción es el directorio actual (raíz del workspace).
-                     // El Dockerfile ahora busca el JAR en demo/target/ gracias al ARG DEPENDENCY=demo/target
+                // Es crucial ejecutar 'docker build' desde la raíz del workspace (TFM/).
+                // Esto permite que Docker encuentre el Dockerfile (si está en la raíz)
+                // y acceda al JAR en 'demo/target/' como parte del contexto de construcción.
+                script {
+                    // El comando 'docker build' se ejecuta desde la raíz del repositorio (TFM/).
+                    // -f Dockerfile: especifica que el Dockerfile a usar se llama 'Dockerfile' y está en la raíz del contexto.
+                    // .: el contexto de construcción es la raíz del repositorio (TFM/).
+                    sh 'docker build -f Dockerfile -t microservicio-bienvenida .'
                 }
-
             }
         }
 
-        // Etapa 5: Local Deploy - Desplegar el microservicio localmente como un contenedor Docker.
+        // Etapa 6: Local Deploy - Desplegar el microservicio localmente como un contenedor Docker.
         // Detiene y elimina el contenedor anterior si existe, y luego inicia uno nuevo.
         // Mapear el puerto 9090 del contenedor al 8081 del host.
         stage('Local Deploy') {
             steps {
                 echo '>>> Stage: Local Deploy - Desplegando localmente con Docker...'
-                dir('demo') {
-                // Detiene y elimina el contenedor Docker existente (si lo hay).
-                    sh 'docker stop microservicio-bienvenida || true'
-                    sh 'docker rm microservicio-bienvenida || true'
+                // Estos comandos de Docker operan sobre imágenes y contenedores,
+                // por lo que se pueden ejecutar desde cualquier parte del workspace.
+                sh 'docker stop microservicio-bienvenida || true' // Detiene si existe, '|| true' evita que falle el pipeline si no existe
+                sh 'docker rm microservicio-bienvenida || true'   // Elimina si existe
 
-                    // Ejecuta un nuevo contenedor Docker.
-                    // -d: detached mode (segundo plano).
-                    // -p 8081:9090: Mapea el puerto 9090 INTERNO del contenedor
-                    //                (donde la app Spring Boot escucha según application.properties)
-                    //                al puerto 8081 EXTERNO en la máquina host de Jenkins.
-                    // --name microservicio-bienvenida: Asigna un nombre al contenedor.
-                    // microservicio-bienvenida: El nombre de la imagen Docker a usar.
-                    sh 'docker run -d -p 8081:9090 --name microservicio-bienvenida microservicio-bienvenida'
-                    echo '>>> El microservicio debería estar accesible localmente en http://localhost:8081/api/welcome'
-                    echo '>>> Verifica los logs del contenedor con: docker logs microservicio-bienvenida'
-                }
+                // Ejecuta un nuevo contenedor Docker en modo detached (-d).
+                // Mapea el puerto 9090 interno del contenedor (donde Spring Boot escucha)
+                // al puerto 8081 externo en la máquina host de Jenkins.
+                sh 'docker run -d -p 8081:9090 --name microservicio-bienvenida microservicio-bienvenida'
+                echo '>>> El microservicio debería estar accesible localmente en http://localhost:8081/api/welcome'
+                echo '>>> Verifica los logs del contenedor con: docker logs microservicio-bienvenida'
             }
         }
-
     }
 
     // Acciones a realizar después de que todas las etapas se hayan completado.
@@ -107,16 +102,13 @@ pipeline {
         always {
             echo '>>> Pipeline finalizado.'
         }
-        // Acciones si el pipeline fue exitoso (todas las etapas pasaron).
         success {
             echo '>>> ¡Pipeline ejecutado con éxito! El microservicio está desplegado localmente en el puerto 8081.'
         }
-        // Acciones si alguna etapa falló.
         failure {
             echo '>>> El pipeline falló. Revisa los logs de la consola para identificar el problema.'
         }
-        // Se ejecuta si el pipeline terminó como inestable (ej: pruebas fallaron).
-         unstable {
+        unstable {
             echo '>>> El pipeline terminó como inestable (ej: algunas pruebas fallaron).'
         }
     }

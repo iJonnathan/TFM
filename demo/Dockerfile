@@ -1,19 +1,19 @@
-# Usa una imagen base con OpenJDK. jdk-slim es más ligera.
-FROM openjdk:17-jdk-slim
+# Dockerfile (ubicado en la raíz del repositorio TFM/)
+FROM openjdk:17-jdk-slim AS build
 
-# Define un volumen para que los logs puedan ser externos si es necesario.
+# Argumento para la ruta de la dependencia Maven dentro del contexto de construcción.
+# Esto hace que el Dockerfile sea más flexible si la estructura de carpetas cambia.
+ARG DEPENDENCY=demo/target
+
+# Crear un volumen para la aplicación (opcional, buena práctica para logs).
 VOLUME /tmp
 
-# Argumento para la ubicación del JAR construido por Maven.
-ARG DEPENDENCY=/target
-
-# Copia el JAR construido al contenedor como app.jar.
-# ¡Asegúrate que el nombre del JAR coincide con tu artifactId y version en pom.xml!
-# Formato: artifactId-version.jar
+# Copiar el archivo JAR de la aplicación desde la ubicación construida por Maven.
+# La ruta 'demo/target/demo-0.0.1-SNAPSHOT.jar' es relativa al contexto de construcción (.).
 COPY ${DEPENDENCY}/demo-0.0.1-SNAPSHOT.jar app.jar
 
-# El punto de entrada para ejecutar el JAR.
-ENTRYPOINT ["java","-jar","/app.jar"]
+# Exponer el puerto en el que la aplicación Spring Boot escuchará.
+EXPOSE 9090
 
-# Expone el puerto por defecto de la aplicación Spring Boot
-EXPOSE 8080
+# Punto de entrada para ejecutar la aplicación.
+ENTRYPOINT ["java","-jar","/app.jar"]
