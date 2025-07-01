@@ -24,29 +24,15 @@ RUN echo \
 # 4. Actualiza e instala el cliente de Docker
 RUN apt-get update && apt-get install -y docker-ce-cli
 
-# 5. (CORRECCIÓN) Añade al usuario 'jenkins' al grupo que coincide con el GID del host
-RUN TARGET_GROUP=$(getent group ${DOCKER_GID} | cut -d: -f1) && \
-    usermod -aG ${TARGET_GROUP} jenkins
+# 5. (SOLUCIÓN DEFINITIVA) Asegura que el grupo exista y añade a jenkins
+RUN if ! getent group ${DOCKER_GID}; then \
+        echo "Creando nuevo grupo 'docker' con GID ${DOCKER_GID}"; \
+        groupadd -g ${DOCKER_GID} docker; \
+    else \
+        echo "El grupo con GID ${DOCKER_GID} ya existe. Usándolo."; \
+    fi && \
+    usermod -aG $(getent group ${DOCKER_GID} | cut -d: -f1) jenkins
 
-# Vuelve al usuario por defecto de
+# Vuelve al usuario por defecto de Jenkins
+USER jenkins
 
-
-#comandos:
-    # docker stop jenkins-ci
-
-    # docker rm jenkins-ci
-
-    # docker volume rm jenkins_home
-
-    # export DOCKER_GID=$(stat -f '%g' /var/run/docker.sock)
-    # docker build --build-arg DOCKER_GID=$DOCKER_GID -t mi-jenkins-con-docker .
-
-    # docker run -d \
-    # --name jenkins-ci \
-    # -p 8080:8080 \
-    # -p 50000:50000 \
-    # -v jenkins_home:/var/jenkins_home \
-    # -v /var/run/docker.sock:/var/run/docker.sock \
-    # mi-jenkins-con-docker
-
-    #docker logs jenkins-ci
