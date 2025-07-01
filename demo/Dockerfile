@@ -5,6 +5,7 @@ FROM openjdk:17-jdk-slim AS build
 # Esto hace que el Dockerfile sea más flexible si la estructura de carpetas cambia.
 ARG DEPENDENCY=demo/target
 
+
 # Crear un volumen para la aplicación (opcional, buena práctica para logs).
 VOLUME /tmp
 
