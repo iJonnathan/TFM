@@ -74,7 +74,7 @@ pipeline {
                     sh 'ls -la demo/target/'
                     sh 'echo $JAVA_HOME'
                     sh 'pwd'
-                    sh 'docker build -f demo/Dockerfile -t microservicio-bienvenida demo/'
+                    sh 'docker build -f demo/Dockerfile -t microservicio-bienvenida .'
                 }
             }
         }
