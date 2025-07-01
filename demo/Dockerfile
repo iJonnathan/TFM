@@ -6,7 +6,7 @@ FROM openjdk:17-jdk-slim AS build
 ARG DEPENDENCY=demo/target
 
 
-# Crear un volumen para la aplicación (opcional, buena práctica para logs).
+# Crear un volumen para la aplicación
 VOLUME /tmp
 
 # Copiar el archivo JAR de la aplicación desde la ubicación construida por Maven.
