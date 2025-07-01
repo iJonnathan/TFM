@@ -10,6 +10,6 @@ public class WelcomeController {
     @GetMapping("/api/welcome")
     public WelcomeDTO welcome(@RequestParam(value = "name", defaultValue = "...") String name) {
 
-        return new WelcomeDTO("hi, bienvenido " + name + ", esto es un demonio");
+        return new WelcomeDTO("Hola, bienvenido " + name + ", esto es un demo");
     }
 }
