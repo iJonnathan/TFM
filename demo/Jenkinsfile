@@ -71,7 +71,8 @@ pipeline {
                     // El comando 'docker build' se ejecuta desde la raíz del repositorio (TFM/).
                     // -f Dockerfile: especifica que el Dockerfile a usar se llama 'Dockerfile' y está en la raíz del contexto.
                     // .: el contexto de construcción es la raíz del repositorio (TFM/).
-                    sh 'docker build -f Dockerfile -t microservicio-bienvenida ./demo/'
+                    sh 'pwd'
+                    sh 'docker build -f Dockerfile -t microservicio-bienvenida ./demo'
                 }
             }
         }
