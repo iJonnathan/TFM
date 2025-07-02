@@ -85,14 +85,20 @@ pipeline {
             failFast true // Si una etapa falla, detiene las demás en paralelo
             parallel {
                 // Herramienta SAST principal para encontrar vulnerabilidades en el código
+                // Herramienta SAST principal para encontrar vulnerabilidades en el código
                 stage('SAST with Semgrep') {
-                    agent { docker { image 'returntocorp/semgrep:latest' } }
+                    // Ya no se define un 'agent' de Docker aquí
                     steps {
                         script {
                             try {
                                 echo 'Running SAST analysis with Semgrep...'
-                                // Escanea con la configuración por defecto y genera un reporte JSON
-                                sh "semgrep scan --config auto --json -o semgrep-report.json"
+                                // Ejecutamos Semgrep usando un comando 'docker run' directamente.
+                                // -v "${pwd}":/src  monta el directorio actual del workspace de Jenkins
+                                // dentro del contenedor para que Semgrep pueda escanearlo.
+                                sh """
+                                    docker run --rm -v "${pwd()}":/src returntocorp/semgrep:latest scan --config auto --json -o /src/semgrep-report.json
+                                """
+                                // Mueve el reporte al directorio de resultados
                                 sh "mv semgrep-report.json ${SCAN_RESULTS_DIR}/"
                                 echo '✅ Semgrep analysis completed.'
                             } catch (Exception e) {
