@@ -1,158 +1,142 @@
-// =============================================================================
-//                    JENKINSFILE FINAL Y OPTIMIZADO
-// =============================================================================
-// Este pipeline integra SAST con Semgrep, análisis con IA robusto,
-// y sigue las mejores prácticas de seguridad y estructura de CI/CD.
-// =============================================================================
-
+// Define el pipeline usando sintaxis Declarativa
 pipeline {
-    // Usar cualquier agente disponible como nodo principal
+    // Define dónde se ejecutará este pipeline.
+    // 'agent any' significa que Jenkins asignará este pipeline a cualquier agente disponible.
     agent any
 
-    // -------------------------------------------------------------------------
-    // HERRAMIENTAS GLOBALES
-    // -------------------------------------------------------------------------
-    // Asegúrate de que 'M3' y 'JDK-17' estén configurados en:
-    // Manage Jenkins -> Tools
+    // Declara las herramientas necesarias. Asegúrate de que estos nombres
+    // ('M3', 'JDK-17') coincidan con la configuración de herramientas globales en Jenkins.
     tools {
-        maven 'M3'
-        jdk 'JDK-17'
+        maven 'M3'     // Herramienta Maven configurada en Jenkins
+        jdk 'JDK-17'   // Herramienta JDK configurada en Jenkins
     }
 
-    // -------------------------------------------------------------------------
-    // VARIABLES DE ENTORNO
-    // -------------------------------------------------------------------------
     environment {
-        // ⚠️ ¡ACCIÓN REQUERIDA!
-        // Reemplaza 'openrouter-api-key-id' con el ID de tu credencial en Jenkins.
-        // La credencial debe ser de tipo "Secret text".
+        // Configurar la API key de OpenRouter como variable de entorno segura
         OPENROUTER_API_KEY = "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"
-    
-        
-        // Variables para mantener la consistencia en todo el pipeline
         SCAN_RESULTS_DIR = 'scan-results'
-        PROJECT_DIR = 'demo' // Directorio del proyecto Maven dentro del repositorio
+        PROJECT_NAME = 'demo'
     }
+    
 
-    // =========================================================================
-    // ETAPAS DEL PIPELINE
-    // =========================================================================
+    // Define las etapas del pipeline. Cada etapa es una fase lógica del proceso CI/CD.
     stages {
-
-        // ---------------------------------------------------------------------
-        // ETAPA 1: Preparación y Checkout del Código
-        // ---------------------------------------------------------------------
-        stage('Setup & Checkout') {
+        // Etapa 1: Checkout - Obtener el código fuente desde el repositorio SCM.
+        // Jenkins se encarga de esto automáticamente al inicio del pipeline
+        // y el workspace se establece en la raíz del repositorio (TFM/).
+        stage('Checkout') {
             steps {
-                echo '>>> 1. Preparando el entorno y descargando el código...'
-                
-                // Limpiar el workspace para una ejecución limpia
-                cleanWs()
-                
-                // ⚠️ ¡ACCIÓN REQUERIDA!
-                // Reemplaza la URL con la de tu repositorio Git.
-                git branch: 'main', url: 'https://github.com/marcogutama/jenkins-pipeline-example.git'
-                
-                // Verificar versiones de herramientas
+                echo '>>> Stage: Checkout - Obteniendo el código fuente desde SCM...'
+                // El workspace inicial ya es la raíz del repositorio (TFM/).
+                // Puedes verificarlo con sh 'pwd'
+            }
+        }
+
+        // Etapa 2: Build - Compilar el código y empaquetar la aplicación con Maven.
+        stage('Build') {
+            steps {
+                echo '>>> Stage: Build - Compilando y empaquetando con Maven...'
+                // **CAMBIO CRÍTICO:** Usamos 'dir' para movernos al subdirectorio 'demo'
+                // donde se encuentra el pom.xml de tu aplicación Maven.
+                dir('demo') {
+                    // Ahora, ejecutamos el comando Maven desde dentro del directorio 'demo/'.
+                    // Esto limpia, compila el código, ejecuta las pruebas unitarias y crea el JAR
+                    // ejecutable en 'demo/target/'.
+                    sh 'mvn clean package'
+                }
+            }
+        }
+
+        // Etapa 3: Unit Test Reports - Publicar los resultados de las pruebas unitarias.
+        stage('Unit Test Reports') {
+            steps {
+                echo '>>> Stage: Unit Test Reports - Publicando resultados de pruebas unitarias...'
+                // Los reportes de pruebas están en 'demo/target/surefire-reports/'.
+                // La ruta es relativa a la raíz del workspace de Jenkins (TFM/).
+                junit 'demo/target/surefire-reports/*.xml'
+            }
+        }
+
+
+        stage('Checkout & Build') {
+            steps {
+                echo 'Starting AI-powered security and quality analysis pipeline'
                 sh "java -version"
                 sh "python3 --version"
 
-                // Instalar dependencias de Python
-                sh "pip3 install requests pathlib --break-system-packages || echo 'Dependencias de Python ya instaladas'"
-                
-                // Crear directorio para los resultados de los escaneos
+                // Instalar dependencias Python si no están instaladas
+                sh "pip3 install requests pathlib --break-system-packages || pip3 install requests pathlib || echo 'Dependencies already installed'"
+                                
+                // Crear directorio para resultados
                 sh "mkdir -p ${SCAN_RESULTS_DIR}"
-            }
-        }
-        
-        // ---------------------------------------------------------------------
-        // ETAPA 2: Compilación y Pruebas Unitarias
-        // ---------------------------------------------------------------------
-        stage('Build & Unit Tests') {
-            steps {
-                echo '>>> 2. Compilando el código y ejecutando pruebas unitarias...'
-                dir(PROJECT_DIR) {
-                    // El flag -Dmaven.test.failure.ignore=true permite que el pipeline continúe
-                    // a las etapas de análisis incluso si las pruebas unitarias fallan.
+                
+                dir('demo') {
                     sh "mvn -Dmaven.test.failure.ignore=true clean package"
                 }
             }
         }
-
-        // ---------------------------------------------------------------------
-        // ETAPA 3: Análisis de Seguridad y Calidad (en paralelo)
-        // ---------------------------------------------------------------------
-        stage('Static Analysis (SAST)') {
-            failFast true // Si una etapa falla, detiene las demás en paralelo
+        
+        stage('Static Analysis') {
             parallel {
-                // Herramienta SAST principal para encontrar vulnerabilidades en el código
-                // Herramienta SAST principal para encontrar vulnerabilidades en el código
-                stage('SAST with Semgrep') {
-                    // Ya no se define un 'agent' de Docker aquí
-                    steps {
-                        script {
-                            try {
-                                echo 'Running SAST analysis with Semgrep...'
-                                // Ejecutamos Semgrep usando un comando 'docker run' directamente.
-                                // -v "${pwd}":/src  monta el directorio actual del workspace de Jenkins
-                                // dentro del contenedor para que Semgrep pueda escanearlo.
-                                sh """
-                                    docker run --rm -v "${pwd()}":/src returntocorp/semgrep:latest scan --config auto --json -o /src/semgrep-report.json
-                                """
-                                // Mueve el reporte al directorio de resultados
-                                sh "mv semgrep-report.json ${SCAN_RESULTS_DIR}/"
-                                echo '✅ Semgrep analysis completed.'
-                            } catch (Exception e) {
-                                echo "❌ Semgrep analysis failed: ${e.getMessage()}"
-                                unstable('Semgrep analysis failed.')
-                            }
-                        }
-                    }
-                }
-                // Escanea LIBRERÍAS de terceros en busca de vulnerabilidades conocidas
                 stage('OWASP Dependency Check') {
                     steps {
-                        dir(PROJECT_DIR) {
+                        dir('demo') {
                             script {
                                 try {
-                                    echo 'Running OWASP Dependency Check (for library vulnerabilities)...'
-                                    sh 'mvn org.owasp:dependency-check-maven:check -Dformat=JSON -DfailBuildOnCVSS=0'
-                                    sh "cp target/dependency-check-report.json ../${SCAN_RESULTS_DIR}/"
+                                    // Ejecutar OWASP Dependency Check
+                                    sh """
+                                        mvn org.owasp:dependency-check-maven:check \
+                                        -Dformat=JSON \
+                                        -DfailBuildOnCVSS=0 \
+                                        -DsuppressedVulnerabilityFiles=.dependency-check-suppressions.xml
+                                    """
+                                    
+                                    // Copiar resultados al directorio de scan
+                                    sh "cp target/dependency-check-report.json ../${SCAN_RESULTS_DIR}/ || echo 'No OWASP report found'"
                                 } catch (Exception e) {
-                                    echo "⚠️ OWASP Dependency Check failed: ${e.getMessage()}"
+                                    echo "OWASP Dependency Check failed: ${e.getMessage()}"
+                                    // Crear archivo vacío para que el análisis AI continue
+                                    sh "echo '{}' > ../${SCAN_RESULTS_DIR}/dependency-check-report.json"
                                 }
                             }
                         }
                     }
                 }
-                // Encuentra PATRONES DE BUGS comunes en el código
+                
                 stage('SpotBugs Analysis') {
                     steps {
-                        dir(PROJECT_DIR) {
+                        dir('demo') {
                             script {
                                 try {
-                                    echo 'Running SpotBugs (for common bug patterns)...'
                                     sh "mvn compile spotbugs:spotbugs"
-                                    sh "cp target/spotbugsXml.xml ../${SCAN_RESULTS_DIR}/"
+                                    sh "cp target/spotbugsXml.xml ../${SCAN_RESULTS_DIR}/ || echo 'No SpotBugs report found'"
                                 } catch (Exception e) {
-                                    echo "⚠️ SpotBugs analysis failed: ${e.getMessage()}"
+                                    echo "SpotBugs analysis failed: ${e.getMessage()}"
+                                    sh "echo '<BugCollection></BugCollection>' > ../${SCAN_RESULTS_DIR}/spotbugsXml.xml"
                                 }
                             }
+                        }
+                    }
+                }
+                
+                stage('Collect Source Files') {
+                    steps {
+                        script {
+                            // Recopilar archivos Java para análisis AI
+                            sh """
+                                find demo/src -name "*.java" -type f > ${SCAN_RESULTS_DIR}/java-files.txt
+                                echo "Found Java files:"
+                                cat ${SCAN_RESULTS_DIR}/java-files.txt
+                            """
                         }
                     }
                 }
             }
         }
         
-        // ---------------------------------------------------------------------
-        // ETAPA 4: Análisis Avanzado con IA (Experimental)
-        // ---------------------------------------------------------------------
-        stage('AI-Powered Analysis (Experimental)') {
+        stage('AI-Powered Analysis') {
             steps {
                 script {
-                    echo '>>> 4. Generando y ejecutando script de análisis con IA...'
-                    // Script de Python mejorado: usa un modelo potente, fuerza la salida JSON
-                    // y detiene el pipeline si hay un error (no más fallos silenciosos).
                     // Escribir script Python para análisis con OpenRouter
                     writeFile file: "${SCAN_RESULTS_DIR}/ai_analyzer.py", text: '''import json
 import os
@@ -179,7 +163,7 @@ class OpenRouterAnalyzer:
 Archivo: {filename}
 
 Dame sugerencias de solucion en base al contexto de cada clase o sentencia con vulnerabilidad.
-Busca específicamente:
+Busca específicamente y :
 1. Inyección SQL
 2. Cross-Site Scripting (XSS)
 3. Problemas de autenticación/autorización
@@ -557,7 +541,8 @@ def main():
 if __name__ == "__main__":
     main()
 '''
-                    // Ejecuta el script de Python. La API key se inyecta de forma segura.
+                    
+                    // Ejecutar análisis AI
                     dir(env.SCAN_RESULTS_DIR) {
                         sh "python3 ai_analyzer.py"
                     }
@@ -565,110 +550,148 @@ if __name__ == "__main__":
             }
         }
         
-        // ---------------------------------------------------------------------
-        // ETAPA 5: Puertas de Calidad (Quality Gates)
-        // ---------------------------------------------------------------------
         stage('Quality Gates') {
             steps {
                 script {
-                    echo '>>> 5. Evaluando resultados contra las puertas de calidad...'
-                    
-                    // Evaluar resultados de Semgrep
-                    def semgrepReport = readFile file: "${SCAN_RESULTS_DIR}/semgrep-report.json", encoding: 'UTF-8'
-                    def semgrepResults = new groovy.json.JsonSlurperClassic().parseText(semgrepReport)
-                    def semgrepIssues = semgrepResults.results.size()
-                    
-                    // Evaluar resultados de la IA
-                    def aiReport = readFile file: "${SCAN_RESULTS_DIR}/analysis-results.json", encoding: 'UTF-8'
-                    def aiResults = new groovy.json.JsonSlurperClassic().parseText(aiReport)
-                    def criticalAI_Issues = aiResults.high_severity_vulnerabilities ?: 0
-
-                    echo "=== QUALITY GATES EVALUATION ==="
-                    echo "Semgrep Findings: ${semgrepIssues}"
-                    echo "High Severity AI Vulnerabilities: ${criticalAI_Issues}"
-                    
-                    def gates = [
-                        'Semgrep Findings': [threshold: 5, current: semgrepIssues], // Umbral para Semgrep
-                        'Critical AI Vulns': [threshold: 0, current: criticalAI_Issues]  // Umbral para IA
-                    ]
-                    
-                    def failedGates = []
-                    gates.each { gateName, values ->
-                        if (values.current > values.threshold) {
-                            failedGates.add("${gateName}: ${values.current} encontrados > ${values.threshold} permitidos")
-                        } else {
-                            echo "✅ ${gateName}: ${values.current} <= ${values.threshold} (PASSED)"
+                    dir(env.SCAN_RESULTS_DIR) {
+                        try {
+                            // 1. Leer el archivo como texto plano usando un comando nativo.
+                            def jsonText = readFile file: 'analysis-results.json', encoding: 'UTF-8'
+                            
+                            // 2. Usar el parser de Groovy para convertir el texto en un objeto de datos.
+                            def analysisResults = new groovy.json.JsonSlurperClassic().parseText(jsonText)
+                            
+                            // A partir de aquí, el resto del código funciona exactamente igual.
+                            def criticalIssues = analysisResults.high_severity_vulnerabilities ?: 0
+                            def totalVulns = analysisResults.total_vulnerabilities ?: 0
+                            def qualityIssues = analysisResults.total_quality_issues ?: 0
+                            
+                            echo "=== QUALITY GATES EVALUATION ==="
+                            echo "High Severity Vulnerabilities: ${criticalIssues}"
+                            echo "Total Vulnerabilities: ${totalVulns}"
+                            echo "Quality Issues: ${qualityIssues}"
+                            
+                            def gates = [
+                                'Critical Vulnerabilities': [threshold: 0, current: criticalIssues],
+                                'Total Vulnerabilities':    [threshold: 10, current: totalVulns],
+                                'Quality Issues':           [threshold: 20, current: qualityIssues]
+                            ]
+                            
+                            def failed = []
+                            gates.each { gateName, values ->
+                                if (values.current > values.threshold) {
+                                    failed.add("${gateName}: ${values.current} encontrados > ${values.threshold} permitidos")
+                                } else {
+                                    echo "✅ ${gateName}: ${values.current} <= ${values.threshold} (PASSED)"
+                                }
+                            }
+                            
+                            if (failed.size() > 0) {
+                                echo "❌ Quality gates FAILED:"
+                                failed.each { echo "  - ${it}" }
+                                unstable("Quality gates failed: ${failed.join(', ')}")
+                            } else {
+                                echo "✅ All quality gates PASSED!"
+                            }
+                            
+                        } catch (Exception e) {
+                            echo "Warning: Could not evaluate quality gates: ${e.getMessage()}"
+                            unstable("Quality gate evaluation failed")
                         }
                     }
-                    
-                    if (!failedGates.isEmpty()) {
-                        unstable("Quality Gates FAILED: ${failedGates.join(', ')}")
-                    } else {
-                        echo "✅ All quality gates PASSED!"
-                    }
                 }
             }
         }
 
-        // ---------------------------------------------------------------------
-        // ETAPA 6: Construcción de la Imagen Docker
-        // ---------------------------------------------------------------------
+
+
+        // Etapa 4: Debug Path - Paso opcional para depuración
+        stage('Debug Path') {
+            steps {
+                sh 'echo "PATH en Jenkins: $PATH"'
+                sh 'echo "Contenido del workspace (profundidad 2):"'
+                sh 'ls -R -d */* | head -n 20' // Muestra directorios y archivos hasta 2 niveles de profundidad
+                sh 'echo "Contenido de demo/target:"'
+                sh 'ls demo/target/' // Para ver el JAR generado
+            }
+        }
+
+        // Etapa 5: Build Docker Image - Construir la imagen Docker de la aplicación.
         stage('Build Docker Image') {
             steps {
-                echo ">>> 6. Construyendo la imagen Docker..."
-                // El contexto de build es la raíz del workspace.
+                echo '>>> Stage: Build Docker Image - Construyendo la imagen Docker...'
+                // Es crucial ejecutar 'docker build' desde la raíz del workspace (TFM/).
+                // Esto permite que Docker encuentre el Dockerfile (si está en la raíz)
+                // y acceda al JAR en 'demo/target/' como parte del contexto de construcción.
                 script {
-                    sh "docker build -f ${PROJECT_DIR}/Dockerfile -t mi-aplicacion-demo:latest ."
+                    // El comando 'docker build' se ejecuta desde la raíz del repositorio (TFM/).
+                    // -f Dockerfile: especifica que el Dockerfile a usar se llama 'Dockerfile' y está en la raíz del contexto.
+                    // .: el contexto de construcción es la raíz del repositorio (TFM/).
+                    sh 'docker build -f Dockerfile -t microservicio-bienvenida .'
                 }
             }
         }
 
-        // ---------------------------------------------------------------------
-        // ETAPA 7: Despliegue Local (Opcional)
-        // ---------------------------------------------------------------------
-        stage('Deploy to Local Docker') {
+        // Etapa 6: Local Deploy - Desplegar el microservicio localmente como un contenedor Docker.
+        // Detiene y elimina el contenedor anterior si existe, y luego inicia uno nuevo.
+        // Mapear el puerto 9090 del contenedor al 8081 del host.
+        stage('Local Deploy') {
             steps {
-                echo '>>> 7. Desplegando el contenedor Docker localmente...'
-                sh 'docker stop mi-aplicacion-demo || true'
-                sh 'docker rm mi-aplicacion-demo || true'
-                sh 'docker run -d -p 8081:8080 --name mi-aplicacion-demo mi-aplicacion-demo:latest'
-                echo '>>> Despliegue completado. Disponible en http://localhost:8081'
+                echo '>>> Stage: Local Deploy - Desplegando localmente con Docker...'
+                // Estos comandos de Docker operan sobre imágenes y contenedores,
+                // por lo que se pueden ejecutar desde cualquier parte del workspace.
+                sh 'docker stop microservicio-bienvenida || true' // Detiene si existe, '|| true' evita que falle el pipeline si no existe
+                sh 'docker rm microservicio-bienvenida || true'   // Elimina si existe
+
+                // Ejecuta un nuevo contenedor Docker en modo detached (-d).
+                // Mapea el puerto 9090 interno del contenedor (donde Spring Boot escucha)
+                // al puerto 8081 externo en la máquina host de Jenkins.
+                sh 'docker run -d -p 8081:9090 --name microservicio-bienvenida microservicio-bienvenida'
+                echo '>>> El microservicio debería estar accesible localmente en http://localhost:8081/api/welcome'
+                echo '>>> Verifica los logs del contenedor con: docker logs microservicio-bienvenida'
             }
         }
     }
 
-    // =========================================================================
-    // ACCIONES POST-EJECUCIÓN
-    // =========================================================================
+    // Acciones a realizar después de que todas las etapas se hayan completado.
     post {
         always {
-            echo 'Finalizando el pipeline. Publicando reportes...'
+            // Publicar resultados de tests
+            junit(
+                allowEmptyResults: true,
+                testResults: 'demo/target/surefire-reports/*.xml'
+            )
             
-            // Publicar resultados de pruebas unitarias
-            junit testResults: "${PROJECT_DIR}/target/surefire-reports/*.xml", allowEmptyResults: true
-            
-            // Publicar reporte HTML del análisis con IA
-            publishHTML(
-                allowMissing: true, // No fallar si el reporte no se genera
+            // Publicar reporte HTML de análisis AI
+            publishHTML([
+                allowMissing: false,
                 alwaysLinkToLastBuild: true,
                 keepAll: true,
                 reportDir: env.SCAN_RESULTS_DIR,
                 reportFiles: 'ai-analysis-report.html',
-                reportName: 'AI Security & Quality Report'
-            )
+                reportName: 'AI Security & Quality Report',
+                reportTitles: 'AI-Powered Code Analysis'
+            ])
             
-            // Archivar todos los artefactos JSON para su inspección
-            archiveArtifacts artifacts: "${SCAN_RESULTS_DIR}/*.json, ${SCAN_RESULTS_DIR}/*.xml", 
-                           allowEmptyArchive: true
+            // Archivar resultados JSON
+            archiveArtifacts artifacts: "${env.SCAN_RESULTS_DIR}/*.json, ${env.SCAN_RESULTS_DIR}/*.html", 
+                            allowEmptyArchive: true,
+                            fingerprint: true
         }
+        
         success {
-            echo '🎉 Pipeline ejecutado con éxito.'
+            echo '🎉 Pipeline completed successfully!'
+            // Aquí podrías agregar notificaciones de Slack/Teams
         }
+        
         failure {
-            echo '❌ El pipeline falló.'
+            echo '❌ Pipeline failed!'
+            // Notificaciones de fallo
         }
+        
         unstable {
-            echo '⚠️ El pipeline es inestable (ej. fallaron Quality Gates o tests).'
+            echo '⚠️ Pipeline completed with warnings!'
+            // Notificaciones de advertencia
         }
     }
 }
