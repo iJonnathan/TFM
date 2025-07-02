@@ -22,6 +22,7 @@ class OpenRouterAnalyzer:
 
 Archivo: {filename}
 
+Dame sugerencias de solucion en base al contexto de cada clase o sentencia con vulnerabilidad.
 Busca específicamente:
 1. Inyección SQL
 2. Cross-Site Scripting (XSS)
