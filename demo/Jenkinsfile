@@ -554,8 +554,13 @@ if __name__ == "__main__":
                 script {
                     dir(env.SCAN_RESULTS_DIR) {
                         try {
-                            def analysisResults = readJSON file: 'analysis-results.json'
+                            // 1. Leer el archivo como texto plano usando un comando nativo.
+                            def jsonText = readFile file: 'analysis-results.json', encoding: 'UTF-8'
                             
+                            // 2. Usar el parser de Groovy para convertir el texto en un objeto de datos.
+                            def analysisResults = new groovy.json.JsonSlurperClassic().parseText(jsonText)
+                            
+                            // A partir de aquí, el resto del código funciona exactamente igual.
                             def criticalIssues = analysisResults.high_severity_vulnerabilities ?: 0
                             def totalVulns = analysisResults.total_vulnerabilities ?: 0
                             def qualityIssues = analysisResults.total_quality_issues ?: 0
@@ -565,17 +570,16 @@ if __name__ == "__main__":
                             echo "Total Vulnerabilities: ${totalVulns}"
                             echo "Quality Issues: ${qualityIssues}"
                             
-                            // Definir umbrales
                             def gates = [
                                 'Critical Vulnerabilities': [threshold: 0, current: criticalIssues],
-                                'Total Vulnerabilities': [threshold: 10, current: totalVulns],
-                                'Quality Issues': [threshold: 20, current: qualityIssues]
+                                'Total Vulnerabilities':    [threshold: 10, current: totalVulns],
+                                'Quality Issues':           [threshold: 20, current: qualityIssues]
                             ]
                             
                             def failed = []
                             gates.each { gateName, values ->
                                 if (values.current > values.threshold) {
-                                    failed.add("${gateName}: ${values.current} > ${values.threshold}")
+                                    failed.add("${gateName}: ${values.current} encontrados > ${values.threshold} permitidos")
                                 } else {
                                     echo "✅ ${gateName}: ${values.current} <= ${values.threshold} (PASSED)"
                                 }
@@ -584,7 +588,6 @@ if __name__ == "__main__":
                             if (failed.size() > 0) {
                                 echo "❌ Quality gates FAILED:"
                                 failed.each { echo "  - ${it}" }
-                                // Para testing, solo advertir en lugar de fallar
                                 unstable("Quality gates failed: ${failed.join(', ')}")
                             } else {
                                 echo "✅ All quality gates PASSED!"
