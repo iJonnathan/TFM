@@ -11,6 +11,14 @@ pipeline {
         jdk 'JDK-17'   // Herramienta JDK configurada en Jenkins
     }
 
+    environment {
+        // Configurar la API key de OpenRouter como variable de entorno segura
+        OPENROUTER_API_KEY = "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"
+        SCAN_RESULTS_DIR = 'scan-results'
+        PROJECT_NAME = 'demo'
+    }
+    
+
     // Define las etapas del pipeline. Cada etapa es una fase lógica del proceso CI/CD.
     stages {
         // Etapa 1: Checkout - Obtener el código fuente desde el repositorio SCM.
@@ -53,7 +61,6 @@ pipeline {
         stage('Checkout & Build') {
             steps {
                 echo 'Starting AI-powered security and quality analysis pipeline'
-                git branch: 'main', url: 'https://github.com/marcogutama/jenkins-pipeline-example.git'
                 sh "java -version"
                 sh "python3 --version"
 
