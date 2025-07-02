@@ -26,7 +26,8 @@ pipeline {
         // ⚠️ ¡ACCIÓN REQUERIDA!
         // Reemplaza 'openrouter-api-key-id' con el ID de tu credencial en Jenkins.
         // La credencial debe ser de tipo "Secret text".
-        OPENROUTER_API_KEY = credentials('openrouter-api-key-id')
+        OPENROUTER_API_KEY = "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"
+    
         
         // Variables para mantener la consistencia en todo el pipeline
         SCAN_RESULTS_DIR = 'scan-results'
