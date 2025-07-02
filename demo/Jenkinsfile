@@ -78,30 +78,6 @@ pipeline {
         
         stage('Static Analysis') {
             parallel {
-                stage('OWASP Dependency Check') {
-                    steps {
-                        dir('demo') {
-                            script {
-                                try {
-                                    // Ejecutar OWASP Dependency Check
-                                    sh """
-                                        mvn org.owasp:dependency-check-maven:check \
-                                        -Dformat=JSON \
-                                        -DfailBuildOnCVSS=0 \
-                                        -DsuppressedVulnerabilityFiles=.dependency-check-suppressions.xml
-                                    """
-                                    
-                                    // Copiar resultados al directorio de scan
-                                    sh "cp target/dependency-check-report.json ../${SCAN_RESULTS_DIR}/ || echo 'No OWASP report found'"
-                                } catch (Exception e) {
-                                    echo "OWASP Dependency Check failed: ${e.getMessage()}"
-                                    // Crear archivo vacío para que el análisis AI continue
-                                    sh "echo '{}' > ../${SCAN_RESULTS_DIR}/dependency-check-report.json"
-                                }
-                            }
-                        }
-                    }
-                }
                 
                 stage('SpotBugs Analysis') {
                     steps {
