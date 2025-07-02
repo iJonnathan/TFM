@@ -20,6 +20,24 @@ pipeline {
 
     // Define las etapas del pipeline. Cada etapa es una fase lógica del proceso CI/CD.
     stages {
+        stage('Checkout & Build') {
+            steps {
+                echo 'Starting AI-powered security and quality analysis pipeline'
+                git branch: 'main', url: 'https://github.com/marcogutama/jenkins-pipeline-example.git'
+                sh "java -version"
+                sh "python3 --version"
+
+                // Instalar dependencias Python si no están instaladas
+                sh "pip3 install requests pathlib --break-system-packages || pip3 install requests pathlib || echo 'Dependencies already installed'"
+                                
+                // Crear directorio para resultados
+                sh "mkdir -p ${SCAN_RESULTS_DIR}"
+                
+                dir('my-app') {
+                    sh "mvn -Dmaven.test.failure.ignore=true clean package"
+                }
+            }
+        }
         // Etapa 1: Checkout - Obtener el código fuente desde el repositorio SCM.
         // Jenkins se encarga de esto automáticamente al inicio del pipeline
         // y el workspace se establece en la raíz del repositorio (TFM/).
@@ -667,4 +685,3 @@ pipeline {
             echo '>>> El pipeline terminó como inestable (ej: algunas pruebas fallaron).'
         }
     }
-}
