@@ -1,8 +1,18 @@
+# plugins.txt (versión visual completa)
+
+# Core de Pipeline
 workflow-aggregator:latest
 git:latest
 github:latest
+
+# Configuración como código
 configuration-as-code:latest
 job-dsl:latest
-maven-plugin:latest
-jdk-tool:latest
-htmlpublisher:latest
+
+# Plugins de Visualización
+pipeline-stage-view:latest      # Para la vista de tabla clásica
+pipeline-graph-analysis:latest # Dependencia clave para visualizaciones
+blueocean:latest               # Para la interfaz gráfica moderna
+
+# Utilidades
+htmlpublisher:latest           # Para tus reportes HTML

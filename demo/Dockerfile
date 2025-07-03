@@ -1,20 +1,20 @@
-# Dockerfile (ubicado en la raíz del repositorio TFM/)
-FROM openjdk:17-jdk-slim AS build
+# Dockerfile para la aplicación Spring Boot
 
-# Argumento para la ruta de la dependencia Maven dentro del contexto de construcción.
-# Esto hace que el Dockerfile sea más flexible si la estructura de carpetas cambia.
-ARG DEPENDENCY=demo/target
+# 1. Usa una imagen base con Java 17.
+FROM eclipse-temurin:17-jdk-jammy
 
+# 2. Define un argumento para la ruta del archivo JAR.
+#    La ruta es relativa al contexto de construcción, que es la raíz de tu repositorio (TFM).
+ARG JAR_FILE=demo/target/*.jar
 
-# Crear un volumen para la aplicación
-VOLUME /tmp
+# 3. Crea un directorio de trabajo dentro de la imagen.
+WORKDIR /app
 
-# Copiar el archivo JAR de la aplicación desde la ubicación construida por Maven.
-# La ruta 'demo/target/demo-0.0.1-SNAPSHOT.jar' es relativa al contexto de construcción (.).
-COPY ${DEPENDENCY}/demo-0.0.1-SNAPSHOT.jar app.jar
+# 4. Copia el JAR compilado por Maven desde tu proyecto a la imagen.
+COPY ${JAR_FILE} app.jar
 
-# Exponer el puerto en el que la aplicación Spring Boot escuchará
+# 5. Expone el puerto en el que corre tu aplicación (9090 según tu Jenkinsfile).
 EXPOSE 9090
 
-# Punto de entrada para ejecutar la aplicación.
-ENTRYPOINT ["java","-jar","/app.jar"]
+# 6. Comando para ejecutar la aplicación cuando el contenedor inicie.
+ENTRYPOINT ["java","-jar","app.jar"]

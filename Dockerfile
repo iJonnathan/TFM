@@ -1,11 +1,12 @@
-# Dockerfile
+# Dockerfile Final
 
 FROM jenkins/jenkins:lts
-ARG DOCKER_GID
+# Nos quedaremos como 'root' para evitar problemas de permisos con Docker
 USER root
 
-# --- INSTALACIÓN DE PAQUETES ---
-# Actualiza e instala todo lo necesario en un solo paso
+# -----------------------------------------------------------------------------
+# PASO 1: INSTALAR PAQUETES BÁSICOS
+# -----------------------------------------------------------------------------
 RUN apt-get update && apt-get install -y \
     ca-certificates \
     curl \
@@ -14,28 +15,30 @@ RUN apt-get update && apt-get install -y \
     maven \
     openjdk-17-jdk
 
-ENV JAVA_HOME=/usr/lib/jvm/java-17-openjdk-arm64
-# --- Instalación de Docker CLI (sin cambios) ---
-RUN install -m 0755 -d /etc/apt/keyrings
-RUN curl -fsSL https://download.docker.com/linux/debian/gpg -o /etc/apt/keyrings/docker.asc
-RUN chmod a+r /etc/apt/keyrings/docker.asc
-RUN echo \
-  "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/debian \
-  $(. /etc/os-release && echo "$VERSION_CODENAME") stable" | \
-  tee /etc/apt/sources.list.d/docker.list > /dev/null
+# -----------------------------------------------------------------------------
+# PASO 2: INSTALAR DOCKER CLI (SECUENCIA COMPLETA Y CORRECTA)
+# -----------------------------------------------------------------------------
+# Primero, añadimos el repositorio oficial de Docker
+RUN install -m 0755 -d /etc/apt/keyrings && \
+    curl -fsSL https://download.docker.com/linux/debian/gpg -o /etc/apt/keyrings/docker.asc && \
+    chmod a+r /etc/apt/keyrings/docker.asc && \
+    echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/debian \
+    $(. /etc/os-release && echo "$VERSION_CODENAME") stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null
+# Segundo, actualizamos la lista de paquetes (ahora incluye los de Docker) y lo instalamos
 RUN apt-get update && apt-get install -y docker-ce-cli
-RUN if getent group ${DOCKER_GID} >/dev/null 2>&1; then \
-        usermod -aG $(getent group ${DOCKER_GID} | cut -d: -f1) jenkins; \
-    else \
-        echo "El grupo con GID ${DOCKER_GID} no existe."; \
-    fi
 
-# --- CONFIGURACIÓN AUTOMÁTICA DE JENKINS (sin cambios) ---
+# -----------------------------------------------------------------------------
+# PASO 3: CONFIGURACIÓN DE VARIABLES DE ENTORNO
+# -----------------------------------------------------------------------------
+ENV JAVA_HOME=/usr/lib/jvm/java-17-openjdk-arm64
+
+# -----------------------------------------------------------------------------
+# PASO 4: CONFIGURACIÓN AUTOMÁTICA DE JENKINS
+# -----------------------------------------------------------------------------
 COPY plugins.txt /usr/share/jenkins/ref/plugins.txt
 RUN jenkins-plugin-cli -f /usr/share/jenkins/ref/plugins.txt
-COPY init.groovy.d/ /usr/share/jenkins/ref/init.groovy.d/
+COPY init.groovy.d/security.groovy /usr/share/jenkins/ref/init.groovy.d/
 COPY jenkins-config/ /var/jenkins_home/casc_configs/
 ENV CASC_JENKINS_CONFIG=/var/jenkins_home/casc_configs/
 
-# FINAL: Vuelve al usuario jenkins
-USER jenkins
+# NOTA: No hay 'USER jenkins' al final. El contenedor se ejecutará como 'root'.
