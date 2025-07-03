@@ -2,19 +2,19 @@
 # El script setup.sh reemplazará los valores entre __...__
 jobs:
   - script: >
-      pipelineJob('TFM-PIED-PIPER') {
-        description('Pipeline para el proyecto cargado desde https://github.com/iJonnathan/TFM.git')
+      pipelineJob('__PIPELINE_NAME__') {
+        description('Pipeline para el proyecto cargado desde __REPO_URL__')
         definition {
           cpsScm {
             scm {
               git {
                 remote {
-                  url('https://github.com/iJonnathan/TFM.git')
+                  url('__REPO_URL__')
                 }
-                branch('*')
+                branch('__BRANCH__')
               }
             }
-            scriptPath('demo/Jenkinsfile')
+            scriptPath('__JENKINSFILE_PATH__')
           }
         }
       }
