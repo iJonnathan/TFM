@@ -28,7 +28,7 @@ docker run -d \
 -v /var/run/docker.sock:/var/run/docker.sock \
 -e JENKINS_ADMIN_PASSWORD="admin" \
 -e JAVA_OPTS="-Djenkins.install.runSetupWizard=false" \
-mi-jenkins-con-docker \
+mi-jenkins-con-docker
 
     docker logs jenkins-ci
     

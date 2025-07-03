@@ -12,8 +12,9 @@ RUN apt-get update && apt-get install -y \
     python3 \
     python3-pip \
     maven \
-    openjdk-17-jdk # <-- AÑADIMOS MAVEN Y JDK 17
+    openjdk-17-jdk
 
+ENV JAVA_HOME=/usr/lib/jvm/java-17-openjdk-arm64
 # --- Instalación de Docker CLI (sin cambios) ---
 RUN install -m 0755 -d /etc/apt/keyrings
 RUN curl -fsSL https://download.docker.com/linux/debian/gpg -o /etc/apt/keyrings/docker.asc

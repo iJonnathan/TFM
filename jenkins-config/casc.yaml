@@ -13,7 +13,7 @@ jobs:
                 remote {
                   url('https://github.com/iJonnathan/TFM.git')
                 }
-                branch('*/main')
+                branch('*')
               }
             }
             scriptPath('demo/Jenkinsfile')
