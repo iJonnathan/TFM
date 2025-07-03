@@ -1,0 +1,22 @@
+# jenkins-config/casc.yaml (versión final)
+
+# La configuración de seguridad y herramientas ahora se maneja con scripts de inicialización.
+# JCasC solo se usará para definir el Job.
+jobs:
+  - script: >
+      pipelineJob('TFM-PIED-PIPER') {
+        description('Pipeline para el proyecto TFM, cargado desde el repo iJonnathan/TFM.')
+        definition {
+          cpsScm {
+            scm {
+              git {
+                remote {
+                  url('https://github.com/iJonnathan/TFM.git')
+                }
+                branch('*/main')
+              }
+            }
+            scriptPath('demo/Jenkinsfile')
+          }
+        }
+      }

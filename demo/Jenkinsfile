@@ -4,12 +4,6 @@ pipeline {
     // 'agent any' significa que Jenkins asignará este pipeline a cualquier agente disponible.
     agent any
 
-    // Declara las herramientas necesarias. Asegúrate de que estos nombres
-    // ('M3', 'JDK-17') coincidan con la configuración de herramientas globales en Jenkins.
-    tools {
-        maven 'M3'     // Herramienta Maven configurada en Jenkins
-        jdk 'JDK-17'   // Herramienta JDK configurada en Jenkins
-    }
 
     environment {
         // Configurar la API key de OpenRouter como variable de entorno segura

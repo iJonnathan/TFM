@@ -1,0 +1,8 @@
+workflow-aggregator:latest
+git:latest
+github:latest
+configuration-as-code:latest
+job-dsl:latest
+maven-plugin:latest
+jdk-tool:latest
+htmlpublisher:latest
