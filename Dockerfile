@@ -27,18 +27,12 @@ RUN install -m 0755 -d /etc/apt/keyrings && \
 # Segundo, actualizamos la lista de paquetes (ahora incluye los de Docker) y lo instalamos
 RUN apt-get update && apt-get install -y docker-ce-cli
 
-# -----------------------------------------------------------------------------
-# PASO 3: CONFIGURACIÓN DE VARIABLES DE ENTORNO
-# -----------------------------------------------------------------------------
-ENV JAVA_HOME=/usr/lib/jvm/java-17-openjdk-arm64
 
 # -----------------------------------------------------------------------------
-# PASO 4: CONFIGURACIÓN AUTOMÁTICA DE JENKINS
+# PASO 3: CONFIGURACIÓN AUTOMÁTICA DE JENKINS
 # -----------------------------------------------------------------------------
 COPY plugins.txt /usr/share/jenkins/ref/plugins.txt
 RUN jenkins-plugin-cli -f /usr/share/jenkins/ref/plugins.txt
 COPY init.groovy.d/security.groovy /usr/share/jenkins/ref/init.groovy.d/
 COPY jenkins-config/ /var/jenkins_home/casc_configs/
 ENV CASC_JENKINS_CONFIG=/var/jenkins_home/casc_configs/
-
-# NOTA: No hay 'USER jenkins' al final. El contenedor se ejecutará como 'root'.

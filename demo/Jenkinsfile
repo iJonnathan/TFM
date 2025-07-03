@@ -598,7 +598,7 @@ if __name__ == "__main__":
                     // -f Dockerfile: especifica que el Dockerfile a usar se llama 'Dockerfile' y está en la raíz del contexto.
                     // .: el contexto de construcción es la raíz del repositorio (TFM/).
                     sh 'pwd'
-                    sh 'docker build -f demo/Dockerfile -t microservicio-bienvenida .'
+                    sh 'docker build -f demo/Dockerfile -t demo-app .'
                 }
             }
         }
@@ -611,15 +611,15 @@ if __name__ == "__main__":
                 echo '>>> Stage: Local Deploy - Desplegando localmente con Docker...'
                 // Estos comandos de Docker operan sobre imágenes y contenedores,
                 // por lo que se pueden ejecutar desde cualquier parte del workspace.
-                sh 'docker stop microservicio-bienvenida || true' // Detiene si existe, '|| true' evita que falle el pipeline si no existe
-                sh 'docker rm microservicio-bienvenida || true'   // Elimina si existe
+                sh 'docker stop demo-app || true' // Detiene si existe, '|| true' evita que falle el pipeline si no existe
+                sh 'docker rm demo-app || true'   // Elimina si existe
 
                 // Ejecuta un nuevo contenedor Docker en modo detached (-d).
                 // Mapea el puerto 9090 interno del contenedor (donde Spring Boot escucha)
                 // al puerto 8081 externo en la máquina host de Jenkins.
-                sh 'docker run -d -p 8081:9090 --name microservicio-bienvenida microservicio-bienvenida'
-                echo '>>> El microservicio debería estar accesible localmente en http://localhost:8081/api/welcome'
-                echo '>>> Verifica los logs del contenedor con: docker logs microservicio-bienvenida'
+                sh 'docker run -d -p 8081:9090 --name demo-app demo-app'
+                echo '>>> El microservicio debería estar accesible localmente en http://localhost:8081'
+                echo '>>> Verifica los logs del contenedor con: docker logs demo-app'
             }
         }
     }
