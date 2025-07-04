@@ -111,7 +111,7 @@ pipeline {
                 reportTitles: 'AI-Powered Code Analysis'
             ])
 
-            sh 'echo "Ruta actual artifacts'
+            sh 'echo "Ruta actual artifacts"'
             sh 'pwd'
             sh 'ls -la'
             
