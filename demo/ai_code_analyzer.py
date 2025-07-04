@@ -49,6 +49,7 @@ Responde en formato JSON con la siguiente estructura:
             "line": "número de línea aproximado",
             "description": "descripción detallada",
             "recommendation": "cómo solucionarlo",
+            "code_correction_suggested": "codigo para solucionar la vulnerabilidad",
             "cwe_id": "CWE-XXX si aplica"
         }}
     ],
@@ -91,7 +92,8 @@ Responde en formato JSON:
             "severity": "HIGH|MEDIUM|LOW",
             "line": "número de línea aproximado",
             "description": "descripción del problema",
-            "recommendation": "mejora sugerida"
+            "recommendation": "mejora sugerida",
+            "code_correction_suggested": "codigo para solucionar la vulnerabilidad"
         }}
     ],
     "quality_score": "puntuación del 0-10",
@@ -261,6 +263,8 @@ Responde en formato JSON:
                     <strong>Descripción:</strong> {vuln.get('description', 'N/A')}
                     <br>
                     <strong>Recomendación:</strong> {vuln.get('recommendation', 'N/A')}
+                    <br>
+                    <strong>Solución sugerida:</strong> {vuln.get('code_correction_suggested', 'N/A')}
                 </div>
 """
                 else:
@@ -287,6 +291,8 @@ Responde en formato JSON:
                     <strong>Descripción:</strong> {issue.get('description', 'N/A')}
                     <br>
                     <strong>Recomendación:</strong> {issue.get('recommendation', 'N/A')}
+                    <br>
+                    <strong>Solución sugerida:</strong> {issue.get('code_correction_suggested', 'N/A')}
                 </div>
 """
                 else:
