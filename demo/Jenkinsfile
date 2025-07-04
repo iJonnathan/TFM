@@ -134,11 +134,12 @@ pipeline {
                     // 1. Copia el script a la raíz del workspace. 
                     //    Aquí, '.' es '/var/lib/jenkins/workspace/ai_analyzer/'.
                     //sh 'cp /opt/jenkins-scripts/ai_code_analyzer.py .'
+                    sh 'pwd'
+                    sh 'cp demo/ai_code_analyzer.py scan-results/'
 
                     // 2. Ahora, entra al directorio de los resultados.
                     dir(env.SCAN_RESULTS_DIR) {
-                        sh 'pwd'
-                        sh 'cp ../ai_code_analyzer.py .'
+
                         // 3. Ejecuta el script, que ahora está en el directorio padre ('../').
                         sh 'python3 ai_code_analyzer.py'
                     }
