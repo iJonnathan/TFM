@@ -7,8 +7,8 @@ import xml.etree.ElementTree as ET
 
 class OpenRouterAnalyzer:
     def __init__(self):
-        self.api_key = "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"
-        self.base_url = "https://openrouter.ai/api/v1"
+        self.api_key = "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"
+        self.base_url = "https://integrate.api.nvidia.com/v1"
         self.headers = {
             "Authorization": f"Bearer {self.api_key}",
             "Content-Type": "application/json",
@@ -107,7 +107,7 @@ Responde en formato JSON:
     def _call_api(self, prompt, analysis_type):
         """Llamar a la API de OpenRouter"""
         payload = {
-            "model": "deepseek/deepseek-chat:free",  # Usar Claude para mejor análisis de código
+            "model": "deepseek-ai/deepseek-r1",  # Usar Claude para mejor análisis de código
             "messages": [
                 {
                     "role": "user", 
