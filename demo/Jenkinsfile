@@ -11,7 +11,7 @@ pipeline {
 
     environment {
         // Configurar la API key de OpenRouter como variable de entorno segura
-        OPENROUTER_API_KEY = "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"
+        OPENROUTER_API_KEY = "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"
         SCAN_RESULTS_DIR = 'scan-results'
         PROJECT_NAME = 'demo'
     }
