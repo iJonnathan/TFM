@@ -7,7 +7,7 @@ import xml.etree.ElementTree as ET
 
 class OpenRouterAnalyzer:
     def __init__(self):
-        self.api_key = "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"
+        self.api_key = "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"
         self.base_url = "https://openrouter.ai/api/v1"
         self.headers = {
             "Authorization": f"Bearer {self.api_key}",
