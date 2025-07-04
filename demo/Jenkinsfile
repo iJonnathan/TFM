@@ -137,6 +137,7 @@ pipeline {
 
                     // 2. Ahora, entra al directorio de los resultados.
                     dir(env.SCAN_RESULTS_DIR) {
+                        sh 'pwd'
                         sh 'cp ../ai_code_analyzer.py .'
                         // 3. Ejecuta el script, que ahora está en el directorio padre ('../').
                         sh 'python3 ai_code_analyzer.py'
