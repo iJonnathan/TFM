@@ -7,15 +7,7 @@ import xml.etree.ElementTree as ET
 
 class OpenRouterAnalyzer:
     def __init__(self):
-        # Leer la API key desde variable de entorno
-        self.api_key = os.getenv('AI_API_KEY')
-        
-        # Verificar que la API key esté disponible
-        if not self.api_key:
-            raise ValueError(
-                "Error: La variable de entorno OPENROUTER_API_KEY no está configurada.\n"
-                "Configúrala ejecutando: export OPENROUTER_API_KEY='tu_api_key_aquí'"
-            )
+        self.api_key = "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"
         self.base_url = "https://openrouter.ai/api/v1"
         self.headers = {
             "Authorization": f"Bearer {self.api_key}",
