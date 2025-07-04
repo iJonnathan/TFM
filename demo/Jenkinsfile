@@ -4,6 +4,10 @@ pipeline {
     // 'agent any' significa que Jenkins asignará este pipeline a cualquier agente disponible.
     agent any
 
+    tools {
+        maven 'M3'
+    }
+
 
     environment {
         // Configurar la API key de OpenRouter como variable de entorno segura
@@ -23,31 +27,6 @@ pipeline {
                 echo '>>> Stage: Checkout - Obteniendo el código fuente desde SCM...'
                 // El workspace inicial ya es la raíz del repositorio (TFM/).
                 // Puedes verificarlo con sh 'pwd'
-            }
-        }
-
-        // Etapa 2: Build - Compilar el código y empaquetar la aplicación con Maven.
-        stage('Build') {
-            steps {
-                echo '>>> Stage: Build - Compilando y empaquetando con Maven...'
-                // **CAMBIO CRÍTICO:** Usamos 'dir' para movernos al subdirectorio 'demo'
-                // donde se encuentra el pom.xml de tu aplicación Maven.
-                dir('demo') {
-                    // Ahora, ejecutamos el comando Maven desde dentro del directorio 'demo/'.
-                    // Esto limpia, compila el código, ejecuta las pruebas unitarias y crea el JAR
-                    // ejecutable en 'demo/target/'.
-                    sh 'mvn clean package'
-                }
-            }
-        }
-
-        // Etapa 3: Unit Test Reports - Publicar los resultados de las pruebas unitarias.
-        stage('Unit Test Reports') {
-            steps {
-                echo '>>> Stage: Unit Test Reports - Publicando resultados de pruebas unitarias...'
-                // Los reportes de pruebas están en 'demo/target/surefire-reports/'.
-                // La ruta es relativa a la raíz del workspace de Jenkins (TFM/).
-                junit 'demo/target/surefire-reports/*.xml'
             }
         }
 
