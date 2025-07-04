@@ -7,7 +7,7 @@ import xml.etree.ElementTree as ET
 
 class OpenRouterAnalyzer:
     def __init__(self):
-        self.api_key = "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"
+        self.api_key = "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"
         self.base_url = "https://openrouter.ai/api/v1"
         self.headers = {
             "Authorization": f"Bearer {self.api_key}",
@@ -371,7 +371,7 @@ def main():
     
     # Leer lista de archivos Java
     print("\n🔍 Buscando archivos Java...")
-    java_files = list(Path("../demo/src").rglob("*.java"))
+    java_files = list(Path("../demo/src/main/java/com/demo/controllers").rglob("*.java"))
     print(f"Archivos Java encontrados: {len(java_files)}")
     
     if not java_files:
