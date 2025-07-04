@@ -7,7 +7,7 @@ import xml.etree.ElementTree as ET
 
 class OpenRouterAnalyzer:
     def __init__(self):
-        self.api_key = "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"
+        self.api_key = "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"
         self.base_url = "https://openrouter.ai/api/v1"
         self.headers = {
             "Authorization": f"Bearer {self.api_key}",
@@ -15,8 +15,8 @@ class OpenRouterAnalyzer:
             "HTTP-Referer": "http://localhost:8080",
             "X-Title": "Jenkins CI/CD Security Scanner"
         }
-        print "Esta es la api key"
-        print self.api_key
+        print ("Esta es la api key")
+        print (self.api_key)
         
     def analyze_code_security(self, code_content, filename):
         """Analizar código Java para vulnerabilidades de seguridad"""
