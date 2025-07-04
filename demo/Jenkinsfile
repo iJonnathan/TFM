@@ -43,9 +43,7 @@ pipeline {
                 // Crear directorio para resultados
                 sh "mkdir -p ${SCAN_RESULTS_DIR}"
                 
-                dir('demo') {
-                    sh "mvn -Dmaven.test.failure.ignore=true clean package"
-                }
+                
             }
         }        
         

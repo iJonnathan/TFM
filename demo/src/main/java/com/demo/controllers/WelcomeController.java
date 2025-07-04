@@ -2,7 +2,6 @@ package com.demo.controllers;
 
 import java.util.logging.Logger;
 
-@RestController
 public class WelcomeController {
 
     // ⚠ Logger mal usado con datos sensibles
