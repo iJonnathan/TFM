@@ -2,7 +2,7 @@
 # El script setup.sh reemplazará los valores entre __...__
 jobs:
   - script: >
-      pipelineJob('TFM-PIED-PIPER') {
+      pipelineJob('TFM-PIPELINE') {
         description('Pipeline para el proyecto cargado desde https://github.com/iJonnathan/TFM.git')
         definition {
           cpsScm {
