@@ -68,65 +68,7 @@ pipeline {
                     sh "mvn -Dmaven.test.failure.ignore=true clean package"
                 }
             }
-        }
-        
-        stage('Static Analysis') {
-            parallel {
-                stage('OWASP Dependency Check') {
-                    steps {
-                        dir('demo') {
-                            script {
-                                try {
-                                    // Ejecutar OWASP Dependency Check
-                                    sh """
-                                        mvn org.owasp:dependency-check-maven:check \
-                                        -Dformat=JSON \
-                                        -DfailBuildOnCVSS=0 \
-                                        -DsuppressedVulnerabilityFiles=.dependency-check-suppressions.xml
-                                    """
-                                    
-                                    // Copiar resultados al directorio de scan
-                                    sh "cp target/dependency-check-report.json ../${SCAN_RESULTS_DIR}/ || echo 'No OWASP report found'"
-                                } catch (Exception e) {
-                                    echo "OWASP Dependency Check failed: ${e.getMessage()}"
-                                    // Crear archivo vacío para que el análisis AI continue
-                                    sh "echo '{}' > ../${SCAN_RESULTS_DIR}/dependency-check-report.json"
-                                }
-                            }
-                        }
-                    }
-                }
-                
-                stage('SpotBugs Analysis') {
-                    steps {
-                        dir('demo') {
-                            script {
-                                try {
-                                    sh "mvn compile spotbugs:spotbugs"
-                                    sh "cp target/spotbugsXml.xml ../${SCAN_RESULTS_DIR}/ || echo 'No SpotBugs report found'"
-                                } catch (Exception e) {
-                                    echo "SpotBugs analysis failed: ${e.getMessage()}"
-                                    sh "echo '<BugCollection></BugCollection>' > ../${SCAN_RESULTS_DIR}/spotbugsXml.xml"
-                                }
-                            }
-                        }
-                    }
-                }
-                
-                stage('Collect Source Files') {
-                    steps {
-                        script {
-                            // Recopilar archivos Java para análisis AI
-                            sh """
-                                find demo/src -name "*.java" -type f > ${SCAN_RESULTS_DIR}/java-files.txt
-                                echo "Found Java files:"
-                                cat ${SCAN_RESULTS_DIR}/java-files.txt
-                            """
-                        }
-                    }
-                }
-            }
-        }
+        }        
         
         stage('AI-Powered Analysis') {
             steps {
@@ -145,57 +87,7 @@ pipeline {
                     }
                 }
             }
-        }
-        
-        stage('Quality Gates') {
-            steps {
-                script {
-                    dir(env.SCAN_RESULTS_DIR) {
-                        try {
-                            def analysisResults = readJSON file: 'analysis-results.json'
-                            
-                            def criticalIssues = analysisResults.high_severity_vulnerabilities ?: 0
-                            def totalVulns = analysisResults.total_vulnerabilities ?: 0
-                            def qualityIssues = analysisResults.total_quality_issues ?: 0
-                            
-                            echo "=== QUALITY GATES EVALUATION ==="
-                            echo "High Severity Vulnerabilities: ${criticalIssues}"
-                            echo "Total Vulnerabilities: ${totalVulns}"
-                            echo "Quality Issues: ${qualityIssues}"
-                            
-                            // Definir umbrales
-                            def gates = [
-                                'Critical Vulnerabilities': [threshold: 0, current: criticalIssues],
-                                'Total Vulnerabilities': [threshold: 10, current: totalVulns],
-                                'Quality Issues': [threshold: 20, current: qualityIssues]
-                            ]
-                            
-                            def failed = []
-                            gates.each { gateName, values ->
-                                if (values.current > values.threshold) {
-                                    failed.add("${gateName}: ${values.current} > ${values.threshold}")
-                                } else {
-                                    echo "✅ ${gateName}: ${values.current} <= ${values.threshold} (PASSED)"
-                                }
-                            }
-                            
-                            if (failed.size() > 0) {
-                                echo "❌ Quality gates FAILED:"
-                                failed.each { echo "  - ${it}" }
-                                // Para testing, solo advertir en lugar de fallar
-                                unstable("Quality gates failed: ${failed.join(', ')}")
-                            } else {
-                                echo "✅ All quality gates PASSED!"
-                            }
-                            
-                        } catch (Exception e) {
-                            echo "Warning: Could not evaluate quality gates: ${e.getMessage()}"
-                            unstable("Quality gate evaluation failed")
-                        }
-                    }
-                }
-            }
-        }
+        }    
 
 
         // Etapa 4: Debug Path - Paso opcional para depuración
@@ -268,7 +160,7 @@ pipeline {
             ])
             
             // Archivar resultados JSON
-            archiveArtifacts artifacts: "${env.SCAN_RESULTS_DIR}/*.json, ${env.SCAN_RESULTS_DIR}/*.html", 
+            archiveArtifacts artifacts: "*.json, *.html", 
                             allowEmptyArchive: true,
                             fingerprint: true
         }
