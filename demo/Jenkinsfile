@@ -12,6 +12,9 @@ pipeline {
     environment {
         SCAN_RESULTS_DIR = 'scan-results'
         PROJECT_NAME = 'demo'
+        // Definir el directorio de análisis aquí
+        JAVA_ANALYSIS_DIR = '../demo/src'  // Cambiar esta ruta según necesites
+        MAX_FILES_TO_ANALYZE = '10'        // Cambiar este número según necesites
     }
     
 
@@ -48,9 +51,6 @@ pipeline {
         stage('AI-Powered Analysis') {
             steps {
                 script {
-                    // 1. Copia el script a la raíz del workspace. 
-                    //    Aquí, '.' es '/var/lib/jenkins/workspace/ai_analyzer/'.
-                    //sh 'cp /opt/jenkins-scripts/ai_code_analyzer.py .'
                     sh 'pwd'
                     sh 'cp demo/ai_code_analyzer.py scan-results/'
 
@@ -58,8 +58,16 @@ pipeline {
                     dir(env.SCAN_RESULTS_DIR) {
                         // 3. Usar withCredentials para inyectar la API key como variable de entorno
                         withCredentials([string(credentialsId: 'openrouter-api-key', variable: 'OPENROUTER_API_KEY')]) {
-                            // 4. Ejecutar el script con la variable de entorno disponible
-                            sh 'python3 ai_code_analyzer.py'
+                            // Ejecutar el script con parámetros
+                            sh """
+                                echo "🚀 Iniciando análisis con IA..."
+                                echo "📂 Directorio: ${params.JAVA_SOURCE_DIR}"
+                                echo "📊 Máximo archivos: ${params.MAX_FILES}"
+                                
+                                python3 ai_code_analyzer.py \\
+                                    --directory "${params.JAVA_SOURCE_DIR}" \\
+                                    --max-files ${params.MAX_FILES}
+                            """
                         }
                     }
                 }

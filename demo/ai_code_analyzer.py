@@ -300,6 +300,53 @@ Responde en formato JSON:
         with open("analysis-results.json", "w") as f:
             json.dump(report_json, f, indent=2)
 
+def find_java_files(directory):
+    """Buscar archivos Java en un directorio"""
+    directory_path = Path(directory)
+    
+    if not directory_path.exists():
+        print(f"❌ El directorio {directory} no existe")
+        return []
+    
+    if not directory_path.is_dir():
+        print(f"❌ {directory} no es un directorio válido")
+        return []
+    
+    java_files = list(directory_path.rglob("*.java"))
+    print(f"📁 Buscando en: {directory_path.absolute()}")
+    print(f"☕ Archivos Java encontrados: {len(java_files)}")
+    
+    return java_files
+
+def get_analysis_directory():
+    """Obtener el directorio a analizar desde argumentos o variables de entorno"""
+    
+    # Prioridad 1: Argumento de línea de comandos
+    parser = argparse.ArgumentParser(description='Analizador de código Java con IA')
+    parser.add_argument('--directory', '-d', 
+                       help='Directorio a analizar (por defecto: busca en directorio actual)')
+    parser.add_argument('--max-files', '-m', type=int, default=5,
+                       help='Número máximo de archivos a analizar (por defecto: 5)')
+    
+    args = parser.parse_args()
+    
+    # Prioridad 2: Variable de entorno
+    env_directory = os.getenv('JAVA_ANALYSIS_DIR')
+    
+    # Prioridad 3: Directorio por defecto
+    if args.directory:
+        analysis_dir = args.directory
+        print(f"📂 Directorio especificado por argumento: {analysis_dir}")
+    elif env_directory:
+        analysis_dir = env_directory
+        print(f"📂 Directorio especificado por variable de entorno: {analysis_dir}")
+    else:
+        # Buscar en directorio actual y subdirectorios
+        analysis_dir = "."
+        print(f"📂 Usando directorio por defecto: {Path('.').absolute()}")
+    
+    return analysis_dir, args.max_files
+
 def main():
     # Obtener y mostrar el directorio actual
     current_directory = Path.cwd()  # Alternativamente, os.getcwd() también sirve
@@ -310,18 +357,34 @@ def main():
     for file in current_directory.iterdir():
         print(f"- {file.name}")
     analyzer = OpenRouterAnalyzer()
+
+    # Obtener directorio a analizar
+    analysis_directory, max_files = get_analysis_directory()
     
-    # Leer lista de archivos Java
-    print("\n🔍 Buscando archivos Java...")
-    java_files = list(Path("../demo/src").rglob("*.java"))
-    print(f"Archivos Java encontrados: {len(java_files)}")
+    # Buscar archivos Java
+    print(f"\n🔍 Buscando archivos Java en: {analysis_directory}")
+    java_files = find_java_files(analysis_directory)
     
     if not java_files:
-        print("❌ No se encontraron archivos Java en demo/src")
-        print("Estructura esperada: demo/src/**/*.java")
+        print(f"❌ No se encontraron archivos Java en {analysis_directory}")
+        print("💡 Asegúrate de que el directorio contenga archivos .java")
+        
+        # Mostrar estructura de directorios para debugging
+        analysis_path = Path(analysis_directory)
+        if analysis_path.exists():
+            print(f"\n📁 Estructura del directorio {analysis_directory}:")
+            for item in analysis_path.rglob("*"):
+                if item.is_file():
+                    print(f"  - {item.relative_to(analysis_path)}")
+        
         sys.exit(1)
     
-    print(f"Analizando {len(java_files)} archivos Java con IA...")
+    # Limitar número de archivos a analizar
+    files_to_analyze = java_files[:max_files]
+    if len(java_files) > max_files:
+        print(f"⚠️  Limitando análisis a {max_files} archivos de {len(java_files)} encontrados")
+    
+    print(f"\n🚀 Analizando {len(files_to_analyze)} archivos Java con IA...")
     
     ai_results = {}
     
