@@ -130,7 +130,7 @@ Responde en formato JSON:
                 }
             ],
             "temperature": 0.1,
-            "max_tokens": 120000
+            "max_tokens": 4000
         }
         
         try:
@@ -138,7 +138,7 @@ Responde en formato JSON:
                 f"{self.base_url}/chat/completions",
                 headers=self.headers,
                 json=payload,
-                timeout=500
+                timeout=60
             )
             
             if response.status_code == 200:
@@ -162,39 +162,6 @@ Responde en formato JSON:
                 
         except Exception as e:
             return {"error": f"Exception: {str(e)}"}
-    
-    def parse_static_analysis(self):
-        """Parsear resultados de análisis estático"""
-        results = {}
-        
-        # Parsear OWASP Dependency Check
-        owasp_file = Path("dependency-check-report.json")
-        if owasp_file.exists():
-            try:
-                with open(owasp_file, 'r') as f:
-                    owasp_data = json.load(f)
-                results['owasp'] = owasp_data
-            except:
-                results['owasp'] = {}
-        
-        # Parsear SpotBugs
-        spotbugs_file = Path("spotbugsXml.xml")
-        if spotbugs_file.exists():
-            try:
-                tree = ET.parse(spotbugs_file)
-                root = tree.getroot()
-                bugs = []
-                for bug in root.findall('.//BugInstance'):
-                    bugs.append({
-                        'type': bug.get('type', ''),
-                        'priority': bug.get('priority', ''),
-                        'category': bug.get('category', '')
-                    })
-                results['spotbugs'] = {'bugs': bugs}
-            except:
-                results['spotbugs'] = {'bugs': []}
-        
-        return results
     
     def generate_report(self, ai_results):
         """Generar reporte HTML comprensivo"""
@@ -346,7 +313,7 @@ def main():
     
     # Leer lista de archivos Java
     print("\n🔍 Buscando archivos Java...")
-    java_files = list(Path("../demo/src/main/java/com/demo/controllers").rglob("*.java"))
+    java_files = list(Path("../demo/src").rglob("*.java"))
     print(f"Archivos Java encontrados: {len(java_files)}")
     
     if not java_files:
@@ -386,9 +353,6 @@ def main():
         except Exception as e:
             print(f"Error analizando {java_file}: {e}")
             ai_results[str(java_file)] = {"error": str(e)}
-    
-    # Parsear resultados de análisis estático
-    static_results = analyzer.parse_static_analysis()
     
     # Generar reporte
     analyzer.generate_report(ai_results)
