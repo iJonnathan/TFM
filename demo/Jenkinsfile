@@ -58,9 +58,11 @@ pipeline {
 
                     // 2. Ahora, entra al directorio de los resultados.
                     dir(env.SCAN_RESULTS_DIR) {
-
-                        // 3. Ejecuta el script, que ahora está en el directorio padre ('../').
-                        sh 'python3 ai_code_analyzer.py'
+                        // 3. Usar withCredentials para inyectar la API key como variable de entorno
+                        withCredentials([string(credentialsId: 'openrouter-api-key', variable: 'OPENROUTER_API_KEY')]) {
+                            // 4. Ejecutar el script con la variable de entorno disponible
+                            sh 'python3 ai_code_analyzer.py'
+                        }
                     }
                 }
             }
