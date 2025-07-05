@@ -54,9 +54,9 @@ pipeline {
                     sh 'pwd'
                     sh 'cp demo/ai_code_analyzer.py scan-results/'
 
-                    // 2. Ahora, entra al directorio de los resultados.
+                    // Ahora, entra al directorio de los resultados.
                     dir(env.SCAN_RESULTS_DIR) {
-                        // 3. Usar withCredentials para inyectar la API key como variable de entorno
+                        // Usar withCredentials para inyectar la API key como variable de entorno
                         withCredentials([string(credentialsId: 'openrouter-api-key', variable: 'OPENROUTER_API_KEY')]) {
                             // Ejecutar el script con parámetros
                             sh """
