@@ -61,12 +61,12 @@ pipeline {
                             // Ejecutar el script con parámetros
                             sh """
                                 echo "🚀 Iniciando análisis con IA..."
-                                echo "📂 Directorio: ${params.JAVA_SOURCE_DIR}"
-                                echo "📊 Máximo archivos: ${params.MAX_FILES}"
+                                echo "📂 Directorio: \${JAVA_ANALYSIS_DIR}"
+                                echo "📊 Máximo archivos: \${MAX_FILES_TO_ANALYZE}"
                                 
                                 python3 ai_code_analyzer.py \\
-                                    --directory "${params.JAVA_SOURCE_DIR}" \\
-                                    --max-files ${params.MAX_FILES}
+                                    --directory \${JAVA_ANALYSIS_DIR} \\
+                                    --max-files \${MAX_FILES_TO_ANALYZE}
                             """
                         }
                     }
