@@ -14,3 +14,4 @@ blueocean:latest
 
 # Utilidades
 htmlpublisher:latest
+pipeline-utility-steps:latest
