@@ -126,30 +126,24 @@ pipeline {
                     echo '>>> Stage: Quality Gate - Verificando políticas de calidad y seguridad...'
                     def resultsFile = "${env.SCAN_RESULTS_DIR}/analysis-results.json"
                     
-                    // Primero, nos aseguramos de que el archivo de resultados exista
                     if (fileExists(resultsFile)) {
-                        // Leemos el archivo JSON para poder acceder a sus datos
                         def analysisResults = readJSON(file: resultsFile)
-                        
-                        // Extraemos la métrica que nos interesa: vulnerabilidades altas
                         def highSeverityVulns = analysisResults.summary.high_severity_vulnerabilities
                         
                         echo "-> Vulnerabilidades de severidad ALTA encontradas: ${highSeverityVulns}"
                         
                         // --- DEFINICIÓN DEL QUALITY GATE ---
-                        // Falla si se encuentra 1 o más vulnerabilidades de severidad ALTA.
                         if (highSeverityVulns > 0) {
-                            // Usamos UNSTABLE en lugar de FAILURE. El build y las pruebas funcionaron,
-                            // pero la calidad no es la esperada. Es una advertencia fuerte.
-                            echo "❌ QUALITY GATE FAILED: Se encontraron ${highSeverityVulns} vulnerabilidades de severidad ALTA. El build se marcará como INESTABLE."
-                            currentBuild.result = 'UNSTABLE'
+                            // CAMBIO CLAVE: Usamos 'error' para detener el pipeline por completo
+                            // y marcarlo como FAILURE.
+                            error("❌ QUALITY GATE FAILED: Se encontraron ${highSeverityVulns} vulnerabilidades de severidad ALTA. Abortando el pipeline.")
                         } else {
                             echo "✅ QUALITY GATE PASSED: No se encontraron vulnerabilidades de severidad ALTA."
                         }
                         
                     } else {
-                        // Si el archivo no existe, advertimos pero no fallamos el build.
-                        echo "⚠️  WARNING: No se encontró el archivo de resultados '${resultsFile}'. Se omite el Quality Gate."
+                        // Si el archivo no existe, también es un error que debe detener el proceso.
+                        error("❌ QUALITY GATE FAILED: No se encontró el archivo de resultados '${resultsFile}'. No se puede verificar la calidad.")
                     }
                 }
             }
