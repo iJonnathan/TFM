@@ -126,7 +126,7 @@ Responde en formato JSON:
     def _call_api(self, prompt, analysis_type):
         """Llamar a la API de OpenRouter"""
         payload = {
-            "model": "meta-llama/llama-4-scout:free",
+            "model": "qwen/qwen-2.5-coder-32b-instruct:free",
             "messages": [
                 {
                     "role": "user", 
