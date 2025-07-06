@@ -144,7 +144,12 @@ Responde en formato JSON:
                 json=payload,
                 timeout=60
             )
-            
+            # --- INICIO DE LÍNEAS DE DEPURACIÓN A AGREGAR ---
+            print(f"--- DEBUG: Respuesta de la API para '{analysis_type}' ---")
+            print(f"Status Code: {response.status_code}")
+            print(f"Response Body (Raw): {response.text}")
+            print("-------------------------------------------------")
+            # --- FIN DE LÍNEAS DE DEPURACIÓN A AGREGAR ---
             if response.status_code == 200:
                 result = response.json()
                 content = result["choices"][0]["message"]["content"]
