@@ -13,3 +13,7 @@ docker image rm jenkins-tfm
 docker-compose up -d --build  
 
 docker-compose logs -f jenkins
+
+
+
+OpenRouter Api Key
