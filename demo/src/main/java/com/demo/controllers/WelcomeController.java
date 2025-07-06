@@ -110,4 +110,23 @@ public class WelcomeController {
             return e.toString(); // ⚠ Devuelve detalles internos
         }
     }
+
+    @GetMapping("/api/all-users-insecure")
+    public String getAllUsersInsecure() throws Exception {
+        Connection conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/demo", "root", DB_PASSWORD);
+        Statement stmt = conn.createStatement();
+        // Una consulta que devuelve indiscriminadamente todos los registros de la tabla de usuarios.
+        ResultSet rs = stmt.executeQuery("SELECT * FROM users");
+
+        StringBuilder result = new StringBuilder("Todos los usuarios:\\n");
+        while (rs.next()) {
+            // Se asume que la tabla tiene columnas 'username', 'email' y 'password_hash'.
+            // Exponer esta información es una brecha de seguridad masiva.
+            result.append("Usuario: ").append(rs.getString("username"))
+                  .append(", Email: ").append(rs.getString("email"))
+                  .append(", PasswordData: ").append(rs.getString("password")) // Suponiendo que hay una columna de contraseña
+                  .append("\\n");
+        }
+        return result.toString();
+    }
 }
