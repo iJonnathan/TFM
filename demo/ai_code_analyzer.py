@@ -100,7 +100,7 @@ Código a analizar:
 {code_content}
 ```
 
-Responde en formato JSON, con la informacion en español:
+Responde en formato JSON:
 {{
     "quality_issues": [
         {{
