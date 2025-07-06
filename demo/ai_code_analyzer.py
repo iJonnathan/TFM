@@ -126,7 +126,7 @@ Responde en formato JSON:
     def _call_api(self, prompt, analysis_type):
         """Llamar a la API de OpenRouter"""
         payload = {
-            "model": "deepseek/deepseek-chat:free",
+            "model": "deepseek/deepseek-chat-v3-0324:free",
             "messages": [
                 {
                     "role": "user", 
