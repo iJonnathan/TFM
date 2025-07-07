@@ -8,7 +8,7 @@ from datetime import datetime
 import hashlib
 
 class OpenRouterAnalyzer:
-    def __init__(self):
+    def __init__(self, model_name="google/gemini-2.0-flash-exp:free"):
         # Leer la API key desde variable de entorno
         self.api_key = os.getenv('OPENROUTER_API_KEY')
         
@@ -22,6 +22,10 @@ class OpenRouterAnalyzer:
             raise ValueError("OPENROUTER_API_KEY no encontrada en las variables de entorno")
         
         print(f"✅ API Key cargada correctamente: {self.api_key[:10]}...")
+        
+        # Configurar modelo de IA
+        self.model_name = model_name
+        print(f"🤖 Modelo de IA configurado: {self.model_name}")
         
         self.base_url = "https://openrouter.ai/api/v1"
         self.headers = {
@@ -122,11 +126,108 @@ Responde en formato JSON:
         """
         
         return self._call_api(prompt, "quality")
+
+    
+    def analyze_pom_security(self, pom_content, filename):
+        """Analizar archivo POM para vulnerabilidades de seguridad"""
+        prompt = f"""
+Actúa como un experto en seguridad de Maven y gestión de dependencias Java. Analiza el siguiente archivo POM para identificar vulnerabilidades y problemas de seguridad:
+
+Archivo: {filename}
+
+Busca específicamente:
+1. Dependencias con versiones obsoletas o vulnerables
+2. Uso de versiones SNAPSHOT en producción
+3. Dependencias sin especificar versión (uso de versiones dinámicas)
+4. Repositorios no seguros (HTTP en lugar de HTTPS)
+5. Plugins con versiones vulnerables
+6. Configuraciones de seguridad inseguras
+7. Dependencias con licencias problemáticas
+8. Uso de repositorios no confiables
+9. Configuración insegura de plugins (como maven-compiler-plugin)
+10. Falta de configuración de seguridad en build
+
+Contenido del POM a analizar:
+```xml
+{pom_content}
+```
+
+Responde en formato JSON con la siguiente estructura:
+{{
+    "vulnerabilities": [
+        {{
+            "type": "tipo de vulnerabilidad",
+            "severity": "HIGH|MEDIUM|LOW",
+            "dependency_or_plugin": "nombre de la dependencia o plugin afectado",
+            "current_version": "versión actual si aplica",
+            "description": "descripción detallada del problema",
+            "recommendation": "cómo solucionarlo",
+            "suggested_version": "versión recomendada si aplica",
+            "cve_references": "CVE relacionados si los conoces",
+            "impact": "impacto potencial de la vulnerabilidad"
+        }}
+    ],
+    "security_score": "puntuación del 0-10",
+    "summary": "resumen ejecutivo de los hallazgos",
+    "total_dependencies": "número total de dependencias analizadas",
+    "outdated_dependencies": "número de dependencias obsoletas",
+    "critical_issues": "número de problemas críticos encontrados"
+}}
+        """
+        
+        return self._call_api(prompt, "pom-security")
+    
+    def analyze_pom_quality(self, pom_content, filename):
+        """Analizar calidad y mejores prácticas del archivo POM"""
+        prompt = f"""
+Actúa como un experto en Maven y mejores prácticas de gestión de proyectos Java. Analiza el siguiente archivo POM para identificar problemas de calidad y configuración:
+
+Archivo: {filename}
+
+Evalúa:
+1. Estructura y organización del POM
+2. Uso adecuado de properties
+3. Gestión de versiones de dependencias
+4. Configuración de plugins
+5. Uso de profiles
+6. Gestión de dependency management
+7. Configuración de build
+8. Metadatos del proyecto (groupId, artifactId, version)
+9. Uso de parent POM
+10. Configuración de encoding y versiones de Java
+
+Contenido del POM a analizar:
+```xml
+{pom_content}
+```
+
+Responde en formato JSON:
+{{
+    "quality_issues": [
+        {{
+            "type": "tipo de problema",
+            "severity": "HIGH|MEDIUM|LOW",
+            "element": "elemento del POM afectado",
+            "description": "descripción del problema",
+            "recommendation": "mejora sugerida",
+            "best_practice": "mejor práctica recomendada",
+            "category": "Structure|Dependencies|Plugins|Configuration|Metadata",
+            "effort": "tiempo estimado para solucionar (minutos)"
+        }}
+    ],
+    "quality_score": "puntuación del 0-10",
+    "maintainability_index": "índice de mantenibilidad del POM",
+    "complexity_score": "puntuación de complejidad de configuración",
+    "compliance_score": "puntuación de cumplimiento de mejores prácticas"
+}}
+        """
+        
+        return self._call_api(prompt, "pom-quality")        
     
     def _call_api(self, prompt, analysis_type):
         """Llamar a la API de OpenRouter"""
         payload = {
-            "model": "google/gemini-2.0-flash-exp:free",
+            "model": self.model_name,  # Usar el modelo configurado
             "messages": [
                 {
                     "role": "user", 
@@ -709,40 +810,52 @@ Responde en formato JSON:
         with open("analysis-results.json", "w", encoding="utf-8") as f:
             json.dump(report_json, f, indent=2, ensure_ascii=False)
 
-def find_java_files(directory):
-    """Buscar archivos Java en un directorio"""
+def find_project_files(directory):
+    """Buscar archivos Java y POM en un directorio"""
     directory_path = Path(directory)
     
     if not directory_path.exists():
         print(f"❌ El directorio {directory} no existe")
-        return []
+        return [], []
     
     if not directory_path.is_dir():
         print(f"❌ {directory} no es un directorio válido")
-        return []
+        return [], []
     
+    # Buscar archivos Java
     java_files = list(directory_path.rglob("*.java"))
+    
+    # Buscar archivos POM (pom.xml)
+    pom_files = list(directory_path.rglob("pom.xml"))
+    
     print(f"📁 Buscando en: {directory_path.absolute()}")
     print(f"☕ Archivos Java encontrados: {len(java_files)}")
+    print(f"📦 Archivos POM encontrados: {len(pom_files)}")
     
-    return java_files
+    return java_files, pom_files
 
-def get_analysis_directory():
-    """Obtener el directorio a analizar desde argumentos o variables de entorno"""
+def get_analysis_parameters():
+    """Obtener parámetros de análisis desde argumentos o variables de entorno"""
     
-    # Prioridad 1: Argumento de línea de comandos
+    # Configurar argumentos de línea de comandos
     parser = argparse.ArgumentParser(description='Analizador de código Java con IA')
     parser.add_argument('--directory', '-d', 
                        help='Directorio a analizar (por defecto: busca en directorio actual)')
     parser.add_argument('--max-files', '-m', type=int, default=5,
                        help='Número máximo de archivos a analizar (por defecto: 5)')
+    parser.add_argument('--model', '-ai', default='google/gemini-2.0-flash-exp:free',
+                       help='Modelo de IA a usar (por defecto: google/gemini-2.0-flash-exp:free)')
     
     args = parser.parse_args()
     
-    # Prioridad 2: Variable de entorno
-    env_directory = os.getenv('JAVA_ANALYSIS_DIR')
+    # Prioridad 1: Argumentos de línea de comandos
+    # Prioridad 2: Variables de entorno
+    # Prioridad 3: Valores por defecto
     
-    # Prioridad 3: Directorio por defecto
+    # Directorio
+    env_directory = os.getenv('JAVA_ANALYSIS_DIR')
+
+
     if args.directory:
         analysis_dir = args.directory
         print(f"📂 Directorio especificado por argumento: {analysis_dir}")
@@ -750,11 +863,39 @@ def get_analysis_directory():
         analysis_dir = env_directory
         print(f"📂 Directorio especificado por variable de entorno: {analysis_dir}")
     else:
-        # Buscar en directorio actual y subdirectorios
+
         analysis_dir = "."
         print(f"📂 Usando directorio por defecto: {Path('.').absolute()}")
     
-    return analysis_dir, args.max_files
+    # Número máximo de archivos
+    env_max_files = os.getenv('JAVA_MAX_FILES')
+    if args.max_files != 5:  # Si se especificó por argumento
+        max_files = args.max_files
+        print(f"📊 Número máximo de archivos especificado por argumento: {max_files}")
+    elif env_max_files:
+        try:
+            max_files = int(env_max_files)
+            print(f"📊 Número máximo de archivos especificado por variable de entorno: {max_files}")
+        except ValueError:
+            max_files = 5
+            print(f"⚠️  Variable de entorno JAVA_MAX_FILES inválida, usando por defecto: {max_files}")
+    else:
+        max_files = args.max_files
+        print(f"📊 Usando número máximo de archivos por defecto: {max_files}")
+    
+    # Modelo de IA
+    env_model = os.getenv('JAVA_AI_MODEL')
+    if args.model != 'google/gemini-2.0-flash-exp:free':  # Si se especificó por argumento
+        ai_model = args.model
+        print(f"🤖 Modelo de IA especificado por argumento: {ai_model}")
+    elif env_model:
+        ai_model = env_model
+        print(f"🤖 Modelo de IA especificado por variable de entorno: {ai_model}")
+    else:
+        ai_model = args.model
+        print(f"🤖 Usando modelo de IA por defecto: {ai_model}")
+    
+    return analysis_dir, max_files, ai_model
 
 def main():
     # Obtener y mostrar el directorio actual
@@ -766,18 +907,19 @@ def main():
     for file in current_directory.iterdir():
         print(f"- {file.name}")
     
-    analyzer = OpenRouterAnalyzer()
+    # Obtener parámetros de análisis
+    analysis_directory, max_files, ai_model = get_analysis_parameters()
+    
+    # Crear analizador con modelo específico
+    analyzer = OpenRouterAnalyzer(model_name=ai_model)
 
-    # Obtener directorio a analizar
-    analysis_directory, max_files = get_analysis_directory()
+    # Buscar archivos Java y POM
+    print(f"\n🔍 Buscando archivos Java y POM en: {analysis_directory}")
+    java_files, pom_files = find_project_files(analysis_directory)
     
-    # Buscar archivos Java
-    print(f"\n🔍 Buscando archivos Java en: {analysis_directory}")
-    java_files = find_java_files(analysis_directory)
-    
-    if not java_files:
-        print(f"❌ No se encontraron archivos Java en {analysis_directory}")
-        print("💡 Asegúrate de que el directorio contenga archivos .java")
+    if not java_files and not pom_files:
+        print(f"❌ No se encontraron archivos Java ni POM en {analysis_directory}")
+        print("💡 Asegúrate de que el directorio contenga archivos .java o pom.xml")
         
         # Mostrar estructura de directorios para debugging
         analysis_path = Path(analysis_directory)
@@ -789,15 +931,21 @@ def main():
         
         sys.exit(1)
     
-    # Limitar número de archivos a analizar
+    # Limitar número de archivos Java a analizar
     files_to_analyze = java_files[:max_files]
     if len(java_files) > max_files:
-        print(f"⚠️  Limitando análisis a {max_files} archivos de {len(java_files)} encontrados")
+        print(f"⚠️  Limitando análisis de Java a {max_files} archivos de {len(java_files)} encontrados")
     
-    print(f"\n🚀 Analizando {len(files_to_analyze)} archivos Java con IA...")
+
+    # Todos los archivos POM se analizan (generalmente son pocos)
+    pom_files_to_analyze = pom_files
+    
+    total_files = len(files_to_analyze) + len(pom_files_to_analyze)
+    print(f"\n🚀 Analizando {total_files} archivos ({len(files_to_analyze)} Java + {len(pom_files_to_analyze)} POM) con IA usando modelo: {ai_model}")
     
     ai_results = {}
     
+    # Analizar archivos Java
     for java_file in files_to_analyze:
         try:
             with open(java_file, 'r', encoding='utf-8') as f:
@@ -806,7 +954,7 @@ def main():
             if len(code_content.strip()) == 0:
                 continue
                 
-            print(f"Analizando: {java_file}")
+            print(f"☕ Analizando Java: {java_file}")
             
             # Análisis de seguridad
             security_result = analyzer.analyze_code_security(code_content, str(java_file))
@@ -815,7 +963,7 @@ def main():
             quality_result = analyzer.analyze_code_quality(code_content, str(java_file))
             
             # Combinar resultados
-            combined_result = {}
+            combined_result = {"file_type": "java"}
             if isinstance(security_result, dict):
                 combined_result.update(security_result)
             if isinstance(quality_result, dict):
@@ -825,7 +973,37 @@ def main():
             
         except Exception as e:
             print(f"Error analizando {java_file}: {e}")
-            ai_results[str(java_file)] = {"error": str(e)}
+            ai_results[str(java_file)] = {"error": str(e), "file_type": "java"}
+    
+    # Analizar archivos POM
+    for pom_file in pom_files_to_analyze:
+        try:
+            with open(pom_file, 'r', encoding='utf-8') as f:
+                pom_content = f.read()
+                
+            if len(pom_content.strip()) == 0:
+                continue
+                
+            print(f"📦 Analizando POM: {pom_file}")
+            
+            # Análisis de seguridad del POM
+            pom_security_result = analyzer.analyze_pom_security(pom_content, str(pom_file))
+            
+            # Análisis de calidad del POM
+            pom_quality_result = analyzer.analyze_pom_quality(pom_content, str(pom_file))
+            
+            # Combinar resultados
+            combined_result = {"file_type": "pom"}
+            if isinstance(pom_security_result, dict):
+                combined_result.update(pom_security_result)
+            if isinstance(pom_quality_result, dict):
+                combined_result.update(pom_quality_result)
+            
+            ai_results[str(pom_file)] = combined_result
+            
+        except Exception as e:
+            print(f"Error analizando {pom_file}: {e}")
+            ai_results[str(pom_file)] = {"error": str(e), "file_type": "pom"}
     
     # Generar reporte
     analyzer.generate_report(ai_results)
@@ -833,6 +1011,10 @@ def main():
     print("✅ Análisis completado. Reportes generados:")
     print("- ai-analysis-report.html")
     print("- analysis-results.json")
+    print(f"📊 Archivos analizados: {len([k for k, v in ai_results.items() if not v.get('error')])}")
+    print(f"📄 Archivos Java: {len([k for k, v in ai_results.items() if v.get('file_type') == 'java' and not v.get('error')])}")
+    print(f"📦 Archivos POM: {len([k for k, v in ai_results.items() if v.get('file_type') == 'pom' and not v.get('error')])}")
+    print(f"❌ Archivos con errores: {len([k for k, v in ai_results.items() if v.get('error')])}")
 
 if __name__ == "__main__":
     main()

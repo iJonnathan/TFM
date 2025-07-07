@@ -15,6 +15,7 @@ pipeline {
         // Definir el directorio de análisis aquí
         JAVA_ANALYSIS_DIR = '../demo/src'  // Cambiar esta ruta según necesites
         MAX_FILES_TO_ANALYZE = '10'        // Cambiar este número según necesites
+        AI_MODEL="google/gemini-2.0-flash-exp:free"
     }
     
 
@@ -63,10 +64,12 @@ pipeline {
                                 echo "🚀 Iniciando análisis con IA..."
                                 echo "📂 Directorio: \${JAVA_ANALYSIS_DIR}"
                                 echo "📊 Máximo archivos: \${MAX_FILES_TO_ANALYZE}"
+                                echo "🤖 Modelo IA: \${AI_MODEL}"
                                 
                                 python3 ai_code_analyzer.py \\
                                     --directory \${JAVA_ANALYSIS_DIR} \\
                                     --max-files \${MAX_FILES_TO_ANALYZE}
+                                    --model \${AI_MODEL}
                             """
                         }
                     }
