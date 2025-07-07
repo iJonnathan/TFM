@@ -126,7 +126,7 @@ Responde en formato JSON:
     def _call_api(self, prompt, analysis_type):
         """Llamar a la API de OpenRouter"""
         payload = {
-            "model": "google/gemini-2.0-flash-exp",
+            "model": "google/gemini-2.0-flash-exp:free",
             "messages": [
                 {
                     "role": "user", 
