@@ -6,6 +6,7 @@ import argparse
 from pathlib import Path
 from datetime import datetime
 import hashlib
+import time
 
 class OpenRouterAnalyzer:
     def __init__(self, model_name="google/gemini-2.0-flash-exp:free"):
@@ -23,10 +24,7 @@ class OpenRouterAnalyzer:
         
         print(f"✅ API Key cargada correctamente: {self.api_key[:10]}...")
         
-        # Configurar modelo de IA
         self.model_name = model_name
-        print(f"🤖 Modelo de IA configurado: {self.model_name}")
-        
         self.base_url = "https://openrouter.ai/api/v1"
         self.headers = {
             "Authorization": f"Bearer {self.api_key}",
@@ -34,6 +32,8 @@ class OpenRouterAnalyzer:
             "HTTP-Referer": "http://localhost:8080",
             "X-Title": "Jenkins CI/CD Security Scanner"
         }
+        
+        print(f"🤖 Modelo seleccionado: {self.model_name}")
         
     def analyze_code_security(self, code_content, filename):
         """Analizar código Java para vulnerabilidades de seguridad"""
@@ -126,28 +126,27 @@ Responde en formato JSON:
         """
         
         return self._call_api(prompt, "quality")
-
     
     def analyze_pom_security(self, pom_content, filename):
         """Analizar archivo POM para vulnerabilidades de seguridad"""
         prompt = f"""
-Actúa como un experto en seguridad de Maven y gestión de dependencias Java. Analiza el siguiente archivo POM para identificar vulnerabilidades y problemas de seguridad:
+Actúa como un experto en seguridad de proyectos Java Maven. Analiza el siguiente archivo POM para identificar vulnerabilidades de seguridad y problemas de configuración:
 
 Archivo: {filename}
 
 Busca específicamente:
-1. Dependencias con versiones obsoletas o vulnerables
-2. Uso de versiones SNAPSHOT en producción
-3. Dependencias sin especificar versión (uso de versiones dinámicas)
-4. Repositorios no seguros (HTTP en lugar de HTTPS)
-5. Plugins con versiones vulnerables
-6. Configuraciones de seguridad inseguras
-7. Dependencias con licencias problemáticas
-8. Uso de repositorios no confiables
-9. Configuración insegura de plugins (como maven-compiler-plugin)
-10. Falta de configuración de seguridad en build
+1. Dependencias con vulnerabilidades conocidas (CVE)
+2. Versiones desactualizadas de dependencias críticas
+3. Dependencias no firmadas o de repositorios inseguros
+4. Configuraciones inseguras de plugins
+5. Exposición de información sensible en propiedades
+6. Configuraciones de Maven que pueden introducir vulnerabilidades
+7. Dependencias con scopes inapropiados
+8. Plugins sin control de versiones
+9. Repositorios HTTP (no HTTPS)
+10. Dependencias snapshot en producción
 
-Contenido del POM a analizar:
+Contenido del POM:
 ```xml
 {pom_content}
 ```
@@ -158,76 +157,34 @@ Responde en formato JSON con la siguiente estructura:
         {{
             "type": "tipo de vulnerabilidad",
             "severity": "HIGH|MEDIUM|LOW",
-            "dependency_or_plugin": "nombre de la dependencia o plugin afectado",
-            "current_version": "versión actual si aplica",
-            "description": "descripción detallada del problema",
+            "line": "número de línea aproximado o sección",
+            "description": "descripción detallada",
             "recommendation": "cómo solucionarlo",
-            "suggested_version": "versión recomendada si aplica",
-            "cve_references": "CVE relacionados si los conoces",
-            "impact": "impacto potencial de la vulnerabilidad"
+            "code_correction_suggested": "configuración XML para solucionar",
+            "cve_id": "CVE-XXXX si aplica",
+            "impact": "impacto potencial de la vulnerabilidad",
+            "dependency": "nombre de la dependencia si aplica"
         }}
     ],
     "security_score": "puntuación del 0-10",
-    "summary": "resumen ejecutivo de los hallazgos",
-    "total_dependencies": "número total de dependencias analizadas",
-    "outdated_dependencies": "número de dependencias obsoletas",
-    "critical_issues": "número de problemas críticos encontrados"
-}}
-        """
-        
-        return self._call_api(prompt, "pom-security")
-    
-    def analyze_pom_quality(self, pom_content, filename):
-        """Analizar calidad y mejores prácticas del archivo POM"""
-        prompt = f"""
-Actúa como un experto en Maven y mejores prácticas de gestión de proyectos Java. Analiza el siguiente archivo POM para identificar problemas de calidad y configuración:
-
-Archivo: {filename}
-
-Evalúa:
-1. Estructura y organización del POM
-2. Uso adecuado de properties
-3. Gestión de versiones de dependencias
-4. Configuración de plugins
-5. Uso de profiles
-6. Gestión de dependency management
-7. Configuración de build
-8. Metadatos del proyecto (groupId, artifactId, version)
-9. Uso de parent POM
-10. Configuración de encoding y versiones de Java
-
-Contenido del POM a analizar:
-```xml
-{pom_content}
-```
-
-Responde en formato JSON:
-{{
-    "quality_issues": [
+    "summary": "resumen ejecutivo de los hallazgos del POM",
+    "outdated_dependencies": [
         {{
-            "type": "tipo de problema",
-            "severity": "HIGH|MEDIUM|LOW",
-            "element": "elemento del POM afectado",
-            "description": "descripción del problema",
-            "recommendation": "mejora sugerida",
-            "best_practice": "mejor práctica recomendada",
-            "category": "Structure|Dependencies|Plugins|Configuration|Metadata",
-            "effort": "tiempo estimado para solucionar (minutos)"
+            "dependency": "nombre de la dependencia",
+            "current_version": "versión actual",
+            "latest_version": "versión más reciente recomendada",
+            "security_risk": "nivel de riesgo de seguridad"
         }}
-    ],
-    "quality_score": "puntuación del 0-10",
-    "maintainability_index": "índice de mantenibilidad del POM",
-    "complexity_score": "puntuación de complejidad de configuración",
-    "compliance_score": "puntuación de cumplimiento de mejores prácticas"
+    ]
 }}
         """
         
-        return self._call_api(prompt, "pom-quality")        
+        return self._call_api(prompt, "pom_security")
     
     def _call_api(self, prompt, analysis_type):
         """Llamar a la API de OpenRouter"""
         payload = {
-            "model": self.model_name,  # Usar el modelo configurado
+            "model": self.model_name,
             "messages": [
                 {
                     "role": "user", 
@@ -295,37 +252,48 @@ Responde en formato JSON:
             return overall_score, avg_security_score, avg_quality_score
         
         return 0, 0, 0
+
+    def generate_report(self, ai_results, analysis_duration, model_used):
+    """Generar reporte HTML comprensivo y moderno"""
     
-    def generate_report(self, ai_results):
-        """Generar reporte HTML comprensivo y moderno"""
-        
-        # Calcular estadísticas generales
-        total_vulnerabilities = sum(len(result.get('vulnerabilities', [])) for result in ai_results.values() if isinstance(result, dict))
-        total_quality_issues = sum(len(result.get('quality_issues', [])) for result in ai_results.values() if isinstance(result, dict))
-        
-        # Contar por severidad
-        high_severity_vulns = sum(1 for result in ai_results.values() if isinstance(result, dict) 
-                                 for vuln in result.get('vulnerabilities', []) 
-                                 if vuln.get('severity') == 'HIGH')
-        
-        medium_severity_vulns = sum(1 for result in ai_results.values() if isinstance(result, dict) 
-                                   for vuln in result.get('vulnerabilities', []) 
-                                   if vuln.get('severity') == 'MEDIUM')
-        
-        low_severity_vulns = sum(1 for result in ai_results.values() if isinstance(result, dict) 
-                                for vuln in result.get('vulnerabilities', []) 
-                                if vuln.get('severity') == 'LOW')
-        
-        # Calcular puntuación general
-        overall_score, avg_security_score, avg_quality_score = self.calculate_overall_score(ai_results)
-        
-        # Determinar el estado del quality gate
-        quality_gate_status = "PASSED" #if high_severity_vulns == 0 and overall_score >= 7 else "FAILED"
-        
-        # Generar timestamp
-        timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        
-        html_content = f"""
+    # Calcular estadísticas generales
+    total_vulnerabilities = sum(len(result.get('vulnerabilities', [])) for result in ai_results.values() if isinstance(result, dict))
+    total_quality_issues = sum(len(result.get('quality_issues', [])) for result in ai_results.values() if isinstance(result, dict))
+    
+    # Contar por severidad
+    high_severity_vulns = sum(1 for result in ai_results.values() if isinstance(result, dict) 
+                             for vuln in result.get('vulnerabilities', []) 
+                             if vuln.get('severity') == 'HIGH')
+    
+    medium_severity_vulns = sum(1 for result in ai_results.values() if isinstance(result, dict) 
+                               for vuln in result.get('vulnerabilities', []) 
+                               if vuln.get('severity') == 'MEDIUM')
+    
+    low_severity_vulns = sum(1 for result in ai_results.values() if isinstance(result, dict) 
+                            for vuln in result.get('vulnerabilities', []) 
+                            if vuln.get('severity') == 'LOW')
+    
+    # Calcular puntuación general
+    overall_score, avg_security_score, avg_quality_score = self.calculate_overall_score(ai_results)
+    
+    # Determinar el estado del quality gate
+    quality_gate_status = "PASSED" if high_severity_vulns == 0 and overall_score >= 7 else "FAILED"
+    
+    # Contar archivos por tipo
+    java_files_count = len([f for f in ai_results.keys() if ai_results[f].get('file_type') == 'java'])
+    pom_files_count = len([f for f in ai_results.keys() if ai_results[f].get('file_type') == 'pom'])
+    
+    # Generar timestamp
+    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    
+    # Formatear duración
+    duration_formatted = f"{analysis_duration:.2f}s"
+    if analysis_duration > 60:
+        minutes = int(analysis_duration // 60)
+        seconds = analysis_duration % 60
+        duration_formatted = f"{minutes}m {seconds:.1f}s"
+    
+    html_content = f"""
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -375,10 +343,23 @@ Responde en formato JSON:
         }}
         
         .meta-info {{
-            display: flex;
-            gap: 30px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
             font-size: 0.9rem;
-            opacity: 0.8;
+            opacity: 0.9;
+        }}
+        
+        .meta-item {{
+            background: rgba(255,255,255,0.1);
+            padding: 15px;
+            border-radius: 10px;
+            backdrop-filter: blur(10px);
+        }}
+        
+        .meta-label {{
+            font-weight: 600;
+            margin-bottom: 5px;
         }}
         
         .quality-gate {{
@@ -435,6 +416,12 @@ Responde en formato JSON:
             border-left: none;
         }}
         
+        .duration-card {{
+            background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+            color: white;
+            border-left: none;
+        }}
+        
         .severity-high {{ color: #dc3545; }}
         .severity-medium {{ color: #fd7e14; }}
         .severity-low {{ color: #28a745; }}
@@ -460,6 +447,22 @@ Responde en formato JSON:
             color: white;
             padding: 20px;
             font-weight: 600;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }}
+        
+        .file-type-badge {{
+            background: rgba(255,255,255,0.2);
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            font-weight: 600;
+        }}
+        
+        .pom-header {{
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
         }}
         
         .file-content {{
@@ -495,6 +498,11 @@ Responde en formato JSON:
         .quality-card {{
             border-left-color: #007bff;
             background: linear-gradient(135deg, #f0f8ff 0%, #ffffff 100%);
+        }}
+        
+        .pom-vulnerability-card {{
+            border-left-color: #f5576c;
+            background: linear-gradient(135deg, #fff0f3 0%, #ffffff 100%);
         }}
         
         .issue-header {{
@@ -547,7 +555,7 @@ Responde en formato JSON:
         .detail-label {{
             font-weight: 600;
             color: #666;
-            min-width: 100px;
+            min-width: 120px;
         }}
         
         .detail-content {{
@@ -570,6 +578,24 @@ Responde en formato JSON:
             margin: 0;
             white-space: pre-wrap;
             word-wrap: break-word;
+        }}
+        
+        .dependency-info {{
+            background: #e3f2fd;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 10px;
+            border-left: 4px solid #2196f3;
+        }}
+        
+        .cve-badge {{
+            background: #ff5722;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 10px;
         }}
         
         .no-issues {{
@@ -599,8 +625,13 @@ Responde en formato JSON:
             }}
             
             .meta-info {{
+                grid-template-columns: 1fr;
+            }}
+            
+            .file-header {{
                 flex-direction: column;
                 gap: 10px;
+                text-align: center;
             }}
         }}
     </style>
@@ -611,9 +642,22 @@ Responde en formato JSON:
             <h1>🛡️ AI Code Analysis Report</h1>
             <div class="subtitle">Análisis inteligente de seguridad y calidad de código</div>
             <div class="meta-info">
-                <div>📅 Generado: {timestamp}</div>
-                <div>📊 Archivos analizados: {len(ai_results)}</div>
-                <div>🤖 Powered by AI</div>
+                <div class="meta-item">
+                    <div class="meta-label">📅 Fecha de Análisis</div>
+                    <div>{timestamp}</div>
+                </div>
+                <div class="meta-item">
+                    <div class="meta-label">⏱️ Duración del Análisis</div>
+                    <div>{duration_formatted}</div>
+                </div>
+                <div class="meta-item">
+                    <div class="meta-label">🤖 Modelo de IA</div>
+                    <div>{model_used}</div>
+                </div>
+                <div class="meta-item">
+                    <div class="meta-label">📊 Archivos Analizados</div>
+                    <div>{len(ai_results)} total ({java_files_count} Java + {pom_files_count} POM)</div>
+                </div>
             </div>
         </div>
         
@@ -626,6 +670,11 @@ Responde en formato JSON:
             <div class="metric-card score-card">
                 <div class="metric-number">{overall_score:.1f}</div>
                 <div class="metric-label">Puntuación General</div>
+            </div>
+            
+            <div class="metric-card duration-card">
+                <div class="metric-number">{duration_formatted}</div>
+                <div class="metric-label">Tiempo de Análisis</div>
             </div>
             
             <div class="metric-card">
@@ -647,47 +696,54 @@ Responde en formato JSON:
                 <div class="metric-number">{avg_security_score:.1f}</div>
                 <div class="metric-label">Puntuación Seguridad</div>
             </div>
-            
-            <div class="metric-card">
-                <div class="metric-number">{avg_quality_score:.1f}</div>
-                <div class="metric-label">Puntuación Calidad</div>
-            </div>
         </div>
         
         <div class="files-section">
             <h2>📁 Análisis por Archivo</h2>
 """
-        
-        # Agregar resultados por archivo
-        for filename, results in ai_results.items():
-            if isinstance(results, dict):
-                html_content += f"""
+    
+    # Agregar resultados por archivo
+    for filename, results in ai_results.items():
+        if isinstance(results, dict):
+            file_type = results.get('file_type', 'unknown')
+            is_pom = file_type == 'pom'
+            
+            header_class = 'pom-header' if is_pom else ''
+            file_icon = '📦' if is_pom else '📄'
+            
+            html_content += f"""
             <div class="file-card">
-                <div class="file-header">
-                    <div>📄 {filename}</div>
+                <div class="file-header {header_class}">
+                    <div>{file_icon} {filename}</div>
+                    <div class="file-type-badge">{file_type.upper()}</div>
                 </div>
                 <div class="file-content">
 """
-                
-                # Análisis de Seguridad
-                html_content += """
+            
+            # Análisis de Seguridad
+            html_content += f"""
                     <div class="analysis-section">
-                        <h3 class="section-title">🔒 Análisis de Seguridad</h3>
+                        <h3 class="section-title">🔒 Análisis de Seguridad{' - Maven POM' if is_pom else ''}</h3>
 """
-                
-                vulnerabilities = results.get('vulnerabilities', [])
-                if vulnerabilities:
-                    for vuln in vulnerabilities:
-                        severity = vuln.get('severity', 'LOW')
-                        html_content += f"""
-                        <div class="issue-card vulnerability-card">
+            
+            vulnerabilities = results.get('vulnerabilities', [])
+            if vulnerabilities:
+                for vuln in vulnerabilities:
+                    severity = vuln.get('severity', 'LOW')
+                    card_class = 'pom-vulnerability-card' if is_pom else 'vulnerability-card'
+                    
+                    html_content += f"""
+                        <div class="issue-card {card_class}">
                             <div class="issue-header">
-                                <div class="issue-title">{vuln.get('type', 'Unknown Vulnerability')}</div>
+                                <div class="issue-title">
+                                    {vuln.get('type', 'Unknown Vulnerability')}
+                                    {f'<span class="cve-badge">{vuln.get("cve_id", "")}</span>' if vuln.get('cve_id') else ''}
+                                </div>
                                 <div class="severity-badge severity-{severity.lower()}-bg">{severity}</div>
                             </div>
                             <div class="issue-details">
                                 <div class="detail-item">
-                                    <div class="detail-label">📍 Línea:</div>
+                                    <div class="detail-label">📍 Ubicación:</div>
                                     <div class="detail-content">{vuln.get('line', 'N/A')}</div>
                                 </div>
                                 <div class="detail-item">
@@ -695,9 +751,29 @@ Responde en formato JSON:
                                     <div class="detail-content">{vuln.get('description', 'N/A')}</div>
                                 </div>
                                 <div class="detail-item">
+                                    <div class="detail-label">💥 Impacto:</div>
+                                    <div class="detail-content">{vuln.get('impact', 'N/A')}</div>
+                                </div>
+                                <div class="detail-item">
                                     <div class="detail-label">💡 Recomendación:</div>
                                     <div class="detail-content">{vuln.get('recommendation', 'N/A')}</div>
                                 </div>
+"""
+                    
+                    # Información específica para POM
+                    if is_pom and vuln.get('dependency'):
+                        html_content += f"""
+                                <div class="detail-item">
+                                    <div class="detail-label">📦 Dependencia:</div>
+                                    <div class="detail-content">
+                                        <div class="dependency-info">
+                                            <strong>{vuln.get('dependency', 'N/A')}</strong>
+                                        </div>
+                                    </div>
+                                </div>
+"""
+                    
+                    html_content += f"""
                                 <div class="detail-item">
                                     <div class="detail-label">🔧 Solución:</div>
                                     <div class="detail-content">
@@ -709,18 +785,19 @@ Responde en formato JSON:
                             </div>
                         </div>
 """
-                else:
-                    html_content += """
+            else:
+                html_content += f"""
                         <div class="no-issues">
-                            ✅ No se encontraron vulnerabilidades de seguridad
+                            ✅ No se encontraron vulnerabilidades de seguridad{' en el POM' if is_pom else ''}
                         </div>
 """
-                
-                html_content += """
+            
+            html_content += """
                     </div>
 """
-                
-                # Análisis de Calidad
+            
+            # Análisis de Calidad (solo para archivos Java)
+            if not is_pom:
                 html_content += """
                     <div class="analysis-section">
                         <h3 class="section-title">⚡ Análisis de Calidad</h3>
@@ -746,6 +823,14 @@ Responde en formato JSON:
                                     <div class="detail-content">{issue.get('description', 'N/A')}</div>
                                 </div>
                                 <div class="detail-item">
+                                    <div class="detail-label">🏷️ Categoría:</div>
+                                    <div class="detail-content">{issue.get('category', 'N/A')}</div>
+                                </div>
+                                <div class="detail-item">
+                                    <div class="detail-label">⏱️ Esfuerzo:</div>
+                                    <div class="detail-content">{issue.get('effort', 'N/A')} min</div>
+                                </div>
+                                <div class="detail-item">
                                     <div class="detail-label">💡 Recomendación:</div>
                                     <div class="detail-content">{issue.get('recommendation', 'N/A')}</div>
                                 </div>
@@ -769,11 +854,49 @@ Responde en formato JSON:
                 
                 html_content += """
                     </div>
+"""
+            
+            # Mostrar dependencias desactualizadas si es POM
+            if is_pom and results.get('outdated_dependencies'):
+                html_content += """
+                    <div class="analysis-section">
+                        <h3 class="section-title">📦 Dependencias Desactualizadas</h3>
+"""
+                
+                for dep in results.get('outdated_dependencies', []):
+                    html_content += f"""
+                        <div class="issue-card">
+                            <div class="issue-header">
+                                <div class="issue-title">{dep.get('dependency', 'N/A')}</div>
+                                <div class="severity-badge severity-medium-bg">OUTDATED</div>
+                            </div>
+                            <div class="issue-details">
+                                <div class="detail-item">
+                                    <div class="detail-label">📍 Versión Actual:</div>
+                                    <div class="detail-content">{dep.get('current_version', 'N/A')}</div>
+                                </div>
+                                <div class="detail-item">
+                                    <div class="detail-label">🆕 Versión Recomendada:</div>
+                                    <div class="detail-content">{dep.get('latest_version', 'N/A')}</div>
+                                </div>
+                                <div class="detail-item">
+                                    <div class="detail-label">🔒 Riesgo de Seguridad:</div>
+                                    <div class="detail-content">{dep.get('security_risk', 'N/A')}</div>
+                                </div>
+                            </div>
+                        </div>
+"""
+                
+                html_content += """
+                    </div>
+"""
+            
+            html_content += """
                 </div>
             </div>
 """
-        
-        html_content += """
+    
+    html_content += """
         </div>
         
         <div class="footer">
@@ -784,78 +907,86 @@ Responde en formato JSON:
 </body>
 </html>
 """
-        
-        # Guardar archivo HTML
-        with open("ai-analysis-report.html", "w", encoding="utf-8") as f:
-            f.write(html_content)
-        
-        # También generar JSON para quality gates
-        report_json = {
-            "timestamp": timestamp,
-            "overall_score": overall_score,
-            "security_score": avg_security_score,
-            "quality_score": avg_quality_score,
-            "quality_gate_status": quality_gate_status,
-            "summary": {
-                "total_vulnerabilities": total_vulnerabilities,
-                "high_severity_vulnerabilities": high_severity_vulns,
-                "medium_severity_vulnerabilities": medium_severity_vulns,
-                "low_severity_vulnerabilities": low_severity_vulns,
-                "total_quality_issues": total_quality_issues,
-                "files_analyzed": len(ai_results)
-            },
-            "detailed_results": ai_results
-        }
-        
-        with open("analysis-results.json", "w", encoding="utf-8") as f:
-            json.dump(report_json, f, indent=2, ensure_ascii=False)
+    
+    # Guardar archivo HTML
+    with open("ai-analysis-report.html", "w", encoding="utf-8") as f:
+        f.write(html_content)
+    
+    # También generar JSON para quality gates
+    report_json = {
+        "timestamp": timestamp,
+        "analysis_duration_seconds": round(analysis_duration, 2),
+        "model_used": model_used,
+        "overall_score": overall_score,
+        "security_score": avg_security_score,
+        "quality_score": avg_quality_score,
+        "quality_gate_status": quality_gate_status,
+        "summary": {
+            "total_vulnerabilities": total_vulnerabilities,
+            "high_severity_vulnerabilities": high_severity_vulns,
+            "medium_severity_vulnerabilities": medium_severity_vulns,
+            "low_severity_vulnerabilities": low_severity_vulns,
+            "total_quality_issues": total_quality_issues,
+            "files_analyzed": len(ai_results),
+            "java_files_analyzed": java_files_count,
+            "pom_files_analyzed": pom_files_count
+        },
+        "detailed_results": ai_results
+    }
+    
+    with open("analysis-results.json", "w", encoding="utf-8") as f:
+        json.dump(report_json, f, indent=2, ensure_ascii=False)
 
-def find_project_files(directory):
-    """Buscar archivos Java y POM en un directorio"""
+def find_java_files(directory):
+    """Buscar archivos Java en un directorio"""
     directory_path = Path(directory)
     
     if not directory_path.exists():
         print(f"❌ El directorio {directory} no existe")
-        return [], []
+        return []
     
     if not directory_path.is_dir():
         print(f"❌ {directory} no es un directorio válido")
-        return [], []
+        return []
     
-    # Buscar archivos Java
     java_files = list(directory_path.rglob("*.java"))
-    
-    # Buscar archivos POM (pom.xml)
-    pom_files = list(directory_path.rglob("pom.xml"))
-    
     print(f"📁 Buscando en: {directory_path.absolute()}")
     print(f"☕ Archivos Java encontrados: {len(java_files)}")
+    
+    return java_files
+
+def find_pom_files(directory):
+    """Buscar archivos POM en un directorio"""
+    directory_path = Path(directory)
+    
+    if not directory_path.exists():
+        print(f"❌ El directorio {directory} no existe")
+        return []
+    
+    # Buscar archivos pom.xml
+    pom_files = list(directory_path.rglob("pom.xml"))
     print(f"📦 Archivos POM encontrados: {len(pom_files)}")
     
-    return java_files, pom_files
+    return pom_files
 
-def get_analysis_parameters():
-    """Obtener parámetros de análisis desde argumentos o variables de entorno"""
+def get_analysis_directory():
+    """Obtener el directorio a analizar desde argumentos o variables de entorno"""
     
-    # Configurar argumentos de línea de comandos
+    # Prioridad 1: Argumento de línea de comandos
     parser = argparse.ArgumentParser(description='Analizador de código Java con IA')
     parser.add_argument('--directory', '-d', 
                        help='Directorio a analizar (por defecto: busca en directorio actual)')
     parser.add_argument('--max-files', '-m', type=int, default=5,
                        help='Número máximo de archivos a analizar (por defecto: 5)')
-    parser.add_argument('--model', '-ai', default='google/gemini-2.0-flash-exp:free',
-                       help='Modelo de IA a usar (por defecto: google/gemini-2.0-flash-exp:free)')
+    parser.add_argument('--model', '-mo', type=str, default="google/gemini-2.0-flash-exp:free",
+                       help='Modelo de IA a utilizar (por defecto: google/gemini-2.0-flash-exp:free)')
     
     args = parser.parse_args()
     
-    # Prioridad 1: Argumentos de línea de comandos
-    # Prioridad 2: Variables de entorno
-    # Prioridad 3: Valores por defecto
-    
-    # Directorio
+    # Prioridad 2: Variable de entorno
     env_directory = os.getenv('JAVA_ANALYSIS_DIR')
-
-
+    
+    # Prioridad 3: Directorio por defecto
     if args.directory:
         analysis_dir = args.directory
         print(f"📂 Directorio especificado por argumento: {analysis_dir}")
@@ -863,39 +994,11 @@ def get_analysis_parameters():
         analysis_dir = env_directory
         print(f"📂 Directorio especificado por variable de entorno: {analysis_dir}")
     else:
-
+        # Buscar en directorio actual y subdirectorios
         analysis_dir = "."
         print(f"📂 Usando directorio por defecto: {Path('.').absolute()}")
     
-    # Número máximo de archivos
-    env_max_files = os.getenv('JAVA_MAX_FILES')
-    if args.max_files != 5:  # Si se especificó por argumento
-        max_files = args.max_files
-        print(f"📊 Número máximo de archivos especificado por argumento: {max_files}")
-    elif env_max_files:
-        try:
-            max_files = int(env_max_files)
-            print(f"📊 Número máximo de archivos especificado por variable de entorno: {max_files}")
-        except ValueError:
-            max_files = 5
-            print(f"⚠️  Variable de entorno JAVA_MAX_FILES inválida, usando por defecto: {max_files}")
-    else:
-        max_files = args.max_files
-        print(f"📊 Usando número máximo de archivos por defecto: {max_files}")
-    
-    # Modelo de IA
-    env_model = os.getenv('JAVA_AI_MODEL')
-    if args.model != 'google/gemini-2.0-flash-exp:free':  # Si se especificó por argumento
-        ai_model = args.model
-        print(f"🤖 Modelo de IA especificado por argumento: {ai_model}")
-    elif env_model:
-        ai_model = env_model
-        print(f"🤖 Modelo de IA especificado por variable de entorno: {ai_model}")
-    else:
-        ai_model = args.model
-        print(f"🤖 Usando modelo de IA por defecto: {ai_model}")
-    
-    return analysis_dir, max_files, ai_model
+    return analysis_dir, args.max_files, args.model
 
 def main():
     # Obtener y mostrar el directorio actual
@@ -907,15 +1010,19 @@ def main():
     for file in current_directory.iterdir():
         print(f"- {file.name}")
     
-    # Obtener parámetros de análisis
-    analysis_directory, max_files, ai_model = get_analysis_parameters()
+    # Obtener directorio a analizar y modelo
+    analysis_directory, max_files, model_name = get_analysis_directory()
     
-    # Crear analizador con modelo específico
-    analyzer = OpenRouterAnalyzer(model_name=ai_model)
-
-    # Buscar archivos Java y POM
-    print(f"\n🔍 Buscando archivos Java y POM en: {analysis_directory}")
-    java_files, pom_files = find_project_files(analysis_directory)
+    # Inicializar analizador con el modelo especificado
+    analyzer = OpenRouterAnalyzer(model_name)
+    
+    # Buscar archivos Java
+    print(f"\n🔍 Buscando archivos Java en: {analysis_directory}")
+    java_files = find_java_files(analysis_directory)
+    
+    # Buscar archivos POM
+    print(f"\n🔍 Buscando archivos POM en: {analysis_directory}")
+    pom_files = find_pom_files(analysis_directory)
     
     if not java_files and not pom_files:
         print(f"❌ No se encontraron archivos Java ni POM en {analysis_directory}")
@@ -934,14 +1041,16 @@ def main():
     # Limitar número de archivos Java a analizar
     files_to_analyze = java_files[:max_files]
     if len(java_files) > max_files:
-        print(f"⚠️  Limitando análisis de Java a {max_files} archivos de {len(java_files)} encontrados")
+        print(f"⚠️  Limitando análisis a {max_files} archivos Java de {len(java_files)} encontrados")
     
-
     # Todos los archivos POM se analizan (generalmente son pocos)
     pom_files_to_analyze = pom_files
     
     total_files = len(files_to_analyze) + len(pom_files_to_analyze)
-    print(f"\n🚀 Analizando {total_files} archivos ({len(files_to_analyze)} Java + {len(pom_files_to_analyze)} POM) con IA usando modelo: {ai_model}")
+    print(f"\n🚀 Analizando {total_files} archivos ({len(files_to_analyze)} Java + {len(pom_files_to_analyze)} POM) con IA...")
+    
+    # Iniciar medición de tiempo
+    start_time = time.time()
     
     ai_results = {}
     
@@ -989,32 +1098,78 @@ def main():
             # Análisis de seguridad del POM
             pom_security_result = analyzer.analyze_pom_security(pom_content, str(pom_file))
             
-            # Análisis de calidad del POM
-            pom_quality_result = analyzer.analyze_pom_quality(pom_content, str(pom_file))
-            
-            # Combinar resultados
-            combined_result = {"file_type": "pom"}
+            # Agregar tipo de archivo
             if isinstance(pom_security_result, dict):
-                combined_result.update(pom_security_result)
-            if isinstance(pom_quality_result, dict):
-                combined_result.update(pom_quality_result)
+                pom_security_result["file_type"] = "pom"
+            else:
+                pom_security_result = {"error": "Error en análisis POM", "file_type": "pom"}
             
-            ai_results[str(pom_file)] = combined_result
+            ai_results[str(pom_file)] = pom_security_result
             
         except Exception as e:
             print(f"Error analizando {pom_file}: {e}")
             ai_results[str(pom_file)] = {"error": str(e), "file_type": "pom"}
     
-    # Generar reporte
-    analyzer.generate_report(ai_results)
+    # Finalizar medición de tiempo
+    end_time = time.time()
+    analysis_duration = end_time - start_time
     
-    print("✅ Análisis completado. Reportes generados:")
-    print("- ai-analysis-report.html")
+    print(f"\n⏱️  Análisis completado en {analysis_duration:.2f} segundos")
+    
+    # Generar reporte JSON con información adicional
+    overall_score, avg_security_score, avg_quality_score = analyzer.calculate_overall_score(ai_results)
+    
+    # Calcular estadísticas generales
+    total_vulnerabilities = sum(len(result.get('vulnerabilities', [])) for result in ai_results.values() if isinstance(result, dict))
+    total_quality_issues = sum(len(result.get('quality_issues', [])) for result in ai_results.values() if isinstance(result, dict))
+    
+    # Contar por severidad
+    high_severity_vulns = sum(1 for result in ai_results.values() if isinstance(result, dict) 
+                             for vuln in result.get('vulnerabilities', []) 
+                             if vuln.get('severity') == 'HIGH')
+    
+    medium_severity_vulns = sum(1 for result in ai_results.values() if isinstance(result, dict) 
+                               for vuln in result.get('vulnerabilities', []) 
+                               if vuln.get('severity') == 'MEDIUM')
+    
+    low_severity_vulns = sum(1 for result in ai_results.values() if isinstance(result, dict) 
+                            for vuln in result.get('vulnerabilities', []) 
+                            if vuln.get('severity') == 'LOW')
+    
+    # Determinar el estado del quality gate
+    quality_gate_status = "PASSED" if high_severity_vulns == 0 and overall_score >= 7 else "FAILED"
+    
+    # Generar timestamp
+    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    
+    report_json = {
+        "timestamp": timestamp,
+        "analysis_duration_seconds": round(analysis_duration, 2),
+        "model_used": model_name,
+        "overall_score": overall_score,
+        "security_score": avg_security_score,
+        "quality_score": avg_quality_score,
+        "quality_gate_status": quality_gate_status,
+        "summary": {
+            "total_vulnerabilities": total_vulnerabilities,
+            "high_severity_vulnerabilities": high_severity_vulns,
+            "medium_severity_vulnerabilities": medium_severity_vulns,
+            "low_severity_vulnerabilities": low_severity_vulns,
+            "total_quality_issues": total_quality_issues,
+            "files_analyzed": len(ai_results),
+            "java_files_analyzed": len([f for f in ai_results.keys() if ai_results[f].get('file_type') == 'java']),
+            "pom_files_analyzed": len([f for f in ai_results.keys() if ai_results[f].get('file_type') == 'pom'])
+        },
+        "detailed_results": ai_results
+    }
+    
+    with open("analysis-results.json", "w", encoding="utf-8") as f:
+        json.dump(report_json, f, indent=2, ensure_ascii=False)
+    
+    print("✅ Análisis completado. Resultado guardado en:")
     print("- analysis-results.json")
-    print(f"📊 Archivos analizados: {len([k for k, v in ai_results.items() if not v.get('error')])}")
-    print(f"📄 Archivos Java: {len([k for k, v in ai_results.items() if v.get('file_type') == 'java' and not v.get('error')])}")
-    print(f"📦 Archivos POM: {len([k for k, v in ai_results.items() if v.get('file_type') == 'pom' and not v.get('error')])}")
-    print(f"❌ Archivos con errores: {len([k for k, v in ai_results.items() if v.get('error')])}")
+    print(f"📊 Puntuación general: {overall_score:.1f}/10")
+    print(f"🚦 Quality Gate: {quality_gate_status}")
 
 if __name__ == "__main__":
     main()
