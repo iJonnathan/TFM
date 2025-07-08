@@ -15,7 +15,7 @@ pipeline {
         // Definir el directorio de análisis aquí
         JAVA_ANALYSIS_DIR = '../demo'  // Cambiar esta ruta según necesites
         MAX_FILES_TO_ANALYZE = '10'        // Cambiar este número según necesites
-        AI_MODEL="deepseek/deepseek-r1-0528:free"
+        AI_MODEL = "google/gemini-2.0-flash-exp:free"
     }
     
 
