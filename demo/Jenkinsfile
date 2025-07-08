@@ -15,7 +15,7 @@ pipeline {
         // Definir el directorio de análisis aquí
         JAVA_ANALYSIS_DIR = '../demo'  // Cambiar esta ruta según necesites
         MAX_FILES_TO_ANALYZE = '10'        // Cambiar este número según necesites
-        AI_MODEL = "qwen/qwen-2.5-coder-32b-instruct:free"
+        AI_MODEL = "deepseek/deepseek-r1-0528:free"
     }
     
 
