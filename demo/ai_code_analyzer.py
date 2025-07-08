@@ -254,688 +254,688 @@ Responde en formato JSON con la siguiente estructura:
         return 0, 0, 0
 
     def generate_report(self, ai_results, analysis_duration, model_used):
-    """Generar reporte HTML comprensivo y moderno"""
-    
-    # Calcular estadísticas generales
-    total_vulnerabilities = sum(len(result.get('vulnerabilities', [])) for result in ai_results.values() if isinstance(result, dict))
-    total_quality_issues = sum(len(result.get('quality_issues', [])) for result in ai_results.values() if isinstance(result, dict))
-    
-    # Contar por severidad
-    high_severity_vulns = sum(1 for result in ai_results.values() if isinstance(result, dict) 
-                             for vuln in result.get('vulnerabilities', []) 
-                             if vuln.get('severity') == 'HIGH')
-    
-    medium_severity_vulns = sum(1 for result in ai_results.values() if isinstance(result, dict) 
-                               for vuln in result.get('vulnerabilities', []) 
-                               if vuln.get('severity') == 'MEDIUM')
-    
-    low_severity_vulns = sum(1 for result in ai_results.values() if isinstance(result, dict) 
-                            for vuln in result.get('vulnerabilities', []) 
-                            if vuln.get('severity') == 'LOW')
-    
-    # Calcular puntuación general
-    overall_score, avg_security_score, avg_quality_score = self.calculate_overall_score(ai_results)
-    
-    # Determinar el estado del quality gate
-    quality_gate_status = "PASSED" if high_severity_vulns == 0 and overall_score >= 7 else "FAILED"
-    
-    # Contar archivos por tipo
-    java_files_count = len([f for f in ai_results.keys() if ai_results[f].get('file_type') == 'java'])
-    pom_files_count = len([f for f in ai_results.keys() if ai_results[f].get('file_type') == 'pom'])
-    
-    # Generar timestamp
-    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    
-    # Formatear duración
-    duration_formatted = f"{analysis_duration:.2f}s"
-    if analysis_duration > 60:
-        minutes = int(analysis_duration // 60)
-        seconds = analysis_duration % 60
-        duration_formatted = f"{minutes}m {seconds:.1f}s"
-    
-    html_content = f"""
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Code Analysis Report</title>
-    <style>
-        * {{
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }}
+        """Generar reporte HTML comprensivo y moderno"""
         
-        body {{
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-            line-height: 1.6;
-            color: #333;
-            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-            min-height: 100vh;
-        }}
+        # Calcular estadísticas generales
+        total_vulnerabilities = sum(len(result.get('vulnerabilities', [])) for result in ai_results.values() if isinstance(result, dict))
+        total_quality_issues = sum(len(result.get('quality_issues', [])) for result in ai_results.values() if isinstance(result, dict))
         
-        .container {{
-            max-width: 1400px;
-            margin: 0 auto;
-            padding: 20px;
-        }}
+        # Contar por severidad
+        high_severity_vulns = sum(1 for result in ai_results.values() if isinstance(result, dict) 
+                                 for vuln in result.get('vulnerabilities', []) 
+                                 if vuln.get('severity') == 'HIGH')
         
-        .header {{
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 30px;
-            border-radius: 20px;
-            margin-bottom: 30px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-        }}
+        medium_severity_vulns = sum(1 for result in ai_results.values() if isinstance(result, dict) 
+                                   for vuln in result.get('vulnerabilities', []) 
+                                   if vuln.get('severity') == 'MEDIUM')
         
-        .header h1 {{
-            font-size: 2.5rem;
-            margin-bottom: 10px;
-            font-weight: 700;
-        }}
+        low_severity_vulns = sum(1 for result in ai_results.values() if isinstance(result, dict) 
+                                for vuln in result.get('vulnerabilities', []) 
+                                if vuln.get('severity') == 'LOW')
         
-        .header .subtitle {{
-            font-size: 1.1rem;
-            opacity: 0.9;
-            margin-bottom: 20px;
-        }}
+        # Calcular puntuación general
+        overall_score, avg_security_score, avg_quality_score = self.calculate_overall_score(ai_results)
         
-        .meta-info {{
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 20px;
-            font-size: 0.9rem;
-            opacity: 0.9;
-        }}
+        # Determinar el estado del quality gate
+        quality_gate_status = "PASSED" if high_severity_vulns == 0 and overall_score >= 7 else "FAILED"
         
-        .meta-item {{
-            background: rgba(255,255,255,0.1);
-            padding: 15px;
-            border-radius: 10px;
-            backdrop-filter: blur(10px);
-        }}
+        # Contar archivos por tipo
+        java_files_count = len([f for f in ai_results.keys() if ai_results[f].get('file_type') == 'java'])
+        pom_files_count = len([f for f in ai_results.keys() if ai_results[f].get('file_type') == 'pom'])
         
-        .meta-label {{
-            font-weight: 600;
-            margin-bottom: 5px;
-        }}
+        # Generar timestamp
+        timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         
-        .quality-gate {{
-            background: {'#d4edda' if quality_gate_status == 'PASSED' else '#f8d7da'};
-            color: {'#155724' if quality_gate_status == 'PASSED' else '#721c24'};
-            padding: 20px;
-            border-radius: 15px;
-            margin-bottom: 30px;
-            border: 3px solid {'#28a745' if quality_gate_status == 'PASSED' else '#dc3545'};
-            text-align: center;
-        }}
+        # Formatear duración
+        duration_formatted = f"{analysis_duration:.2f}s"
+        if analysis_duration > 60:
+            minutes = int(analysis_duration // 60)
+            seconds = analysis_duration % 60
+            duration_formatted = f"{minutes}m {seconds:.1f}s"
         
-        .quality-gate h2 {{
-            font-size: 1.5rem;
-            margin-bottom: 10px;
-        }}
-        
-        .metrics-grid {{
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 20px;
-            margin-bottom: 30px;
-        }}
-        
-        .metric-card {{
-            background: white;
-            padding: 25px;
-            border-radius: 15px;
-            box-shadow: 0 5px 20px rgba(0,0,0,0.08);
-            border-left: 5px solid #667eea;
-            transition: transform 0.3s ease;
-        }}
-        
-        .metric-card:hover {{
-            transform: translateY(-5px);
-        }}
-        
-        .metric-number {{
-            font-size: 3rem;
-            font-weight: 700;
-            margin-bottom: 10px;
-        }}
-        
-        .metric-label {{
-            font-size: 0.9rem;
-            color: #666;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }}
-        
-        .score-card {{
-            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-            color: white;
-            border-left: none;
-        }}
-        
-        .duration-card {{
-            background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
-            color: white;
-            border-left: none;
-        }}
-        
-        .severity-high {{ color: #dc3545; }}
-        .severity-medium {{ color: #fd7e14; }}
-        .severity-low {{ color: #28a745; }}
-        
-        .files-section {{
-            background: white;
-            border-radius: 15px;
-            padding: 30px;
-            margin-bottom: 30px;
-            box-shadow: 0 5px 20px rgba(0,0,0,0.08);
-        }}
-        
-        .file-card {{
-            background: #f8f9fa;
-            border-radius: 10px;
-            margin-bottom: 30px;
-            overflow: hidden;
-            border: 1px solid #e9ecef;
-        }}
-        
-        .file-header {{
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 20px;
-            font-weight: 600;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }}
-        
-        .file-type-badge {{
-            background: rgba(255,255,255,0.2);
-            padding: 5px 15px;
-            border-radius: 20px;
-            font-size: 0.8rem;
-            text-transform: uppercase;
-            font-weight: 600;
-        }}
-        
-        .pom-header {{
-            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-        }}
-        
-        .file-content {{
-            padding: 25px;
-        }}
-        
-        .analysis-section {{
-            margin-bottom: 30px;
-        }}
-        
-        .section-title {{
-            font-size: 1.3rem;
-            margin-bottom: 20px;
-            color: #333;
-            border-bottom: 2px solid #667eea;
-            padding-bottom: 10px;
-        }}
-        
-        .issue-card {{
-            background: white;
-            border-radius: 10px;
-            padding: 20px;
-            margin-bottom: 15px;
-            border-left: 4px solid #667eea;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-        }}
-        
-        .vulnerability-card {{
-            border-left-color: #dc3545;
-            background: linear-gradient(135deg, #fff5f5 0%, #ffffff 100%);
-        }}
-        
-        .quality-card {{
-            border-left-color: #007bff;
-            background: linear-gradient(135deg, #f0f8ff 0%, #ffffff 100%);
-        }}
-        
-        .pom-vulnerability-card {{
-            border-left-color: #f5576c;
-            background: linear-gradient(135deg, #fff0f3 0%, #ffffff 100%);
-        }}
-        
-        .issue-header {{
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 15px;
-        }}
-        
-        .issue-title {{
-            font-size: 1.1rem;
-            font-weight: 600;
-            color: #333;
-        }}
-        
-        .severity-badge {{
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-size: 0.8rem;
-            font-weight: 600;
-            text-transform: uppercase;
-        }}
-        
-        .severity-high-bg {{
-            background: #dc3545;
-            color: white;
-        }}
-        
-        .severity-medium-bg {{
-            background: #fd7e14;
-            color: white;
-        }}
-        
-        .severity-low-bg {{
-            background: #28a745;
-            color: white;
-        }}
-        
-        .issue-details {{
-            display: grid;
-            gap: 15px;
-        }}
-        
-        .detail-item {{
-            display: flex;
-            align-items: flex-start;
-            gap: 10px;
-        }}
-        
-        .detail-label {{
-            font-weight: 600;
-            color: #666;
-            min-width: 120px;
-        }}
-        
-        .detail-content {{
-            flex: 1;
-        }}
-        
-        .code-block {{
-            background: #282c34;
-            color: #abb2bf;
-            padding: 20px;
-            border-radius: 10px;
-            overflow-x: auto;
-            margin-top: 10px;
-            font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
-            font-size: 0.9rem;
-            line-height: 1.4;
-        }}
-        
-        .code-block pre {{
-            margin: 0;
-            white-space: pre-wrap;
-            word-wrap: break-word;
-        }}
-        
-        .dependency-info {{
-            background: #e3f2fd;
-            padding: 15px;
-            border-radius: 8px;
-            margin-top: 10px;
-            border-left: 4px solid #2196f3;
-        }}
-        
-        .cve-badge {{
-            background: #ff5722;
-            color: white;
-            padding: 2px 8px;
-            border-radius: 12px;
-            font-size: 0.75rem;
-            font-weight: 600;
-            margin-left: 10px;
-        }}
-        
-        .no-issues {{
-            text-align: center;
-            color: #28a745;
-            font-size: 1.1rem;
-            padding: 40px;
-            background: linear-gradient(135deg, #d4edda 0%, #ffffff 100%);
-            border-radius: 10px;
-            border: 2px solid #28a745;
-        }}
-        
-        .footer {{
-            text-align: center;
-            padding: 20px;
-            color: #666;
-            font-size: 0.9rem;
-        }}
-        
-        @media (max-width: 768px) {{
-            .metrics-grid {{
-                grid-template-columns: 1fr;
+        html_content = f"""
+    <!DOCTYPE html>
+    <html lang="es">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>AI Code Analysis Report</title>
+        <style>
+            * {{
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box;
+            }}
+            
+            body {{
+                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+                line-height: 1.6;
+                color: #333;
+                background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+                min-height: 100vh;
+            }}
+            
+            .container {{
+                max-width: 1400px;
+                margin: 0 auto;
+                padding: 20px;
+            }}
+            
+            .header {{
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                color: white;
+                padding: 30px;
+                border-radius: 20px;
+                margin-bottom: 30px;
+                box-shadow: 0 10px 30px rgba(0,0,0,0.1);
             }}
             
             .header h1 {{
-                font-size: 2rem;
+                font-size: 2.5rem;
+                margin-bottom: 10px;
+                font-weight: 700;
+            }}
+            
+            .header .subtitle {{
+                font-size: 1.1rem;
+                opacity: 0.9;
+                margin-bottom: 20px;
             }}
             
             .meta-info {{
-                grid-template-columns: 1fr;
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+                gap: 20px;
+                font-size: 0.9rem;
+                opacity: 0.9;
+            }}
+            
+            .meta-item {{
+                background: rgba(255,255,255,0.1);
+                padding: 15px;
+                border-radius: 10px;
+                backdrop-filter: blur(10px);
+            }}
+            
+            .meta-label {{
+                font-weight: 600;
+                margin-bottom: 5px;
+            }}
+            
+            .quality-gate {{
+                background: {'#d4edda' if quality_gate_status == 'PASSED' else '#f8d7da'};
+                color: {'#155724' if quality_gate_status == 'PASSED' else '#721c24'};
+                padding: 20px;
+                border-radius: 15px;
+                margin-bottom: 30px;
+                border: 3px solid {'#28a745' if quality_gate_status == 'PASSED' else '#dc3545'};
+                text-align: center;
+            }}
+            
+            .quality-gate h2 {{
+                font-size: 1.5rem;
+                margin-bottom: 10px;
+            }}
+            
+            .metrics-grid {{
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+                gap: 20px;
+                margin-bottom: 30px;
+            }}
+            
+            .metric-card {{
+                background: white;
+                padding: 25px;
+                border-radius: 15px;
+                box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+                border-left: 5px solid #667eea;
+                transition: transform 0.3s ease;
+            }}
+            
+            .metric-card:hover {{
+                transform: translateY(-5px);
+            }}
+            
+            .metric-number {{
+                font-size: 3rem;
+                font-weight: 700;
+                margin-bottom: 10px;
+            }}
+            
+            .metric-label {{
+                font-size: 0.9rem;
+                color: #666;
+                text-transform: uppercase;
+                letter-spacing: 0.5px;
+            }}
+            
+            .score-card {{
+                background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+                color: white;
+                border-left: none;
+            }}
+            
+            .duration-card {{
+                background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+                color: white;
+                border-left: none;
+            }}
+            
+            .severity-high {{ color: #dc3545; }}
+            .severity-medium {{ color: #fd7e14; }}
+            .severity-low {{ color: #28a745; }}
+            
+            .files-section {{
+                background: white;
+                border-radius: 15px;
+                padding: 30px;
+                margin-bottom: 30px;
+                box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+            }}
+            
+            .file-card {{
+                background: #f8f9fa;
+                border-radius: 10px;
+                margin-bottom: 30px;
+                overflow: hidden;
+                border: 1px solid #e9ecef;
             }}
             
             .file-header {{
-                flex-direction: column;
-                gap: 10px;
-                text-align: center;
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                color: white;
+                padding: 20px;
+                font-weight: 600;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
             }}
-        }}
-    </style>
-</head>
-<body>
-    <div class="container">
-        <div class="header">
-            <h1>🛡️ AI Code Analysis Report</h1>
-            <div class="subtitle">Análisis inteligente de seguridad y calidad de código</div>
-            <div class="meta-info">
-                <div class="meta-item">
-                    <div class="meta-label">📅 Fecha de Análisis</div>
-                    <div>{timestamp}</div>
-                </div>
-                <div class="meta-item">
-                    <div class="meta-label">⏱️ Duración del Análisis</div>
-                    <div>{duration_formatted}</div>
-                </div>
-                <div class="meta-item">
-                    <div class="meta-label">🤖 Modelo de IA</div>
-                    <div>{model_used}</div>
-                </div>
-                <div class="meta-item">
-                    <div class="meta-label">📊 Archivos Analizados</div>
-                    <div>{len(ai_results)} total ({java_files_count} Java + {pom_files_count} POM)</div>
+            
+            .file-type-badge {{
+                background: rgba(255,255,255,0.2);
+                padding: 5px 15px;
+                border-radius: 20px;
+                font-size: 0.8rem;
+                text-transform: uppercase;
+                font-weight: 600;
+            }}
+            
+            .pom-header {{
+                background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            }}
+            
+            .file-content {{
+                padding: 25px;
+            }}
+            
+            .analysis-section {{
+                margin-bottom: 30px;
+            }}
+            
+            .section-title {{
+                font-size: 1.3rem;
+                margin-bottom: 20px;
+                color: #333;
+                border-bottom: 2px solid #667eea;
+                padding-bottom: 10px;
+            }}
+            
+            .issue-card {{
+                background: white;
+                border-radius: 10px;
+                padding: 20px;
+                margin-bottom: 15px;
+                border-left: 4px solid #667eea;
+                box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            }}
+            
+            .vulnerability-card {{
+                border-left-color: #dc3545;
+                background: linear-gradient(135deg, #fff5f5 0%, #ffffff 100%);
+            }}
+            
+            .quality-card {{
+                border-left-color: #007bff;
+                background: linear-gradient(135deg, #f0f8ff 0%, #ffffff 100%);
+            }}
+            
+            .pom-vulnerability-card {{
+                border-left-color: #f5576c;
+                background: linear-gradient(135deg, #fff0f3 0%, #ffffff 100%);
+            }}
+            
+            .issue-header {{
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                margin-bottom: 15px;
+            }}
+            
+            .issue-title {{
+                font-size: 1.1rem;
+                font-weight: 600;
+                color: #333;
+            }}
+            
+            .severity-badge {{
+                padding: 4px 12px;
+                border-radius: 20px;
+                font-size: 0.8rem;
+                font-weight: 600;
+                text-transform: uppercase;
+            }}
+            
+            .severity-high-bg {{
+                background: #dc3545;
+                color: white;
+            }}
+            
+            .severity-medium-bg {{
+                background: #fd7e14;
+                color: white;
+            }}
+            
+            .severity-low-bg {{
+                background: #28a745;
+                color: white;
+            }}
+            
+            .issue-details {{
+                display: grid;
+                gap: 15px;
+            }}
+            
+            .detail-item {{
+                display: flex;
+                align-items: flex-start;
+                gap: 10px;
+            }}
+            
+            .detail-label {{
+                font-weight: 600;
+                color: #666;
+                min-width: 120px;
+            }}
+            
+            .detail-content {{
+                flex: 1;
+            }}
+            
+            .code-block {{
+                background: #282c34;
+                color: #abb2bf;
+                padding: 20px;
+                border-radius: 10px;
+                overflow-x: auto;
+                margin-top: 10px;
+                font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+                font-size: 0.9rem;
+                line-height: 1.4;
+            }}
+            
+            .code-block pre {{
+                margin: 0;
+                white-space: pre-wrap;
+                word-wrap: break-word;
+            }}
+            
+            .dependency-info {{
+                background: #e3f2fd;
+                padding: 15px;
+                border-radius: 8px;
+                margin-top: 10px;
+                border-left: 4px solid #2196f3;
+            }}
+            
+            .cve-badge {{
+                background: #ff5722;
+                color: white;
+                padding: 2px 8px;
+                border-radius: 12px;
+                font-size: 0.75rem;
+                font-weight: 600;
+                margin-left: 10px;
+            }}
+            
+            .no-issues {{
+                text-align: center;
+                color: #28a745;
+                font-size: 1.1rem;
+                padding: 40px;
+                background: linear-gradient(135deg, #d4edda 0%, #ffffff 100%);
+                border-radius: 10px;
+                border: 2px solid #28a745;
+            }}
+            
+            .footer {{
+                text-align: center;
+                padding: 20px;
+                color: #666;
+                font-size: 0.9rem;
+            }}
+            
+            @media (max-width: 768px) {{
+                .metrics-grid {{
+                    grid-template-columns: 1fr;
+                }}
+                
+                .header h1 {{
+                    font-size: 2rem;
+                }}
+                
+                .meta-info {{
+                    grid-template-columns: 1fr;
+                }}
+                
+                .file-header {{
+                    flex-direction: column;
+                    gap: 10px;
+                    text-align: center;
+                }}
+            }}
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <div class="header">
+                <h1>🛡️ AI Code Analysis Report</h1>
+                <div class="subtitle">Análisis inteligente de seguridad y calidad de código</div>
+                <div class="meta-info">
+                    <div class="meta-item">
+                        <div class="meta-label">📅 Fecha de Análisis</div>
+                        <div>{timestamp}</div>
+                    </div>
+                    <div class="meta-item">
+                        <div class="meta-label">⏱️ Duración del Análisis</div>
+                        <div>{duration_formatted}</div>
+                    </div>
+                    <div class="meta-item">
+                        <div class="meta-label">🤖 Modelo de IA</div>
+                        <div>{model_used}</div>
+                    </div>
+                    <div class="meta-item">
+                        <div class="meta-label">📊 Archivos Analizados</div>
+                        <div>{len(ai_results)} total ({java_files_count} Java + {pom_files_count} POM)</div>
+                    </div>
                 </div>
             </div>
-        </div>
+            
+            <div class="quality-gate">
+                <h2>🚦 Quality Gate: {quality_gate_status}</h2>
+                <p>{'✅ Tu código cumple con los estándares de calidad' if quality_gate_status == 'PASSED' else '❌ Se requieren mejoras antes de producción'}</p>
+            </div>
+            
+            <div class="metrics-grid">
+                <div class="metric-card score-card">
+                    <div class="metric-number">{overall_score:.1f}</div>
+                    <div class="metric-label">Puntuación General</div>
+                </div>
+                
+                <div class="metric-card duration-card">
+                    <div class="metric-number">{duration_formatted}</div>
+                    <div class="metric-label">Tiempo de Análisis</div>
+                </div>
+                
+                <div class="metric-card">
+                    <div class="metric-number severity-high">{high_severity_vulns}</div>
+                    <div class="metric-label">Vulnerabilidades Críticas</div>
+                </div>
+                
+                <div class="metric-card">
+                    <div class="metric-number">{total_vulnerabilities}</div>
+                    <div class="metric-label">Total Vulnerabilidades</div>
+                </div>
+                
+                <div class="metric-card">
+                    <div class="metric-number">{total_quality_issues}</div>
+                    <div class="metric-label">Problemas de Calidad</div>
+                </div>
+                
+                <div class="metric-card">
+                    <div class="metric-number">{avg_security_score:.1f}</div>
+                    <div class="metric-label">Puntuación Seguridad</div>
+                </div>
+            </div>
+            
+            <div class="files-section">
+                <h2>📁 Análisis por Archivo</h2>
+    """
         
-        <div class="quality-gate">
-            <h2>🚦 Quality Gate: {quality_gate_status}</h2>
-            <p>{'✅ Tu código cumple con los estándares de calidad' if quality_gate_status == 'PASSED' else '❌ Se requieren mejoras antes de producción'}</p>
-        </div>
-        
-        <div class="metrics-grid">
-            <div class="metric-card score-card">
-                <div class="metric-number">{overall_score:.1f}</div>
-                <div class="metric-label">Puntuación General</div>
-            </div>
-            
-            <div class="metric-card duration-card">
-                <div class="metric-number">{duration_formatted}</div>
-                <div class="metric-label">Tiempo de Análisis</div>
-            </div>
-            
-            <div class="metric-card">
-                <div class="metric-number severity-high">{high_severity_vulns}</div>
-                <div class="metric-label">Vulnerabilidades Críticas</div>
-            </div>
-            
-            <div class="metric-card">
-                <div class="metric-number">{total_vulnerabilities}</div>
-                <div class="metric-label">Total Vulnerabilidades</div>
-            </div>
-            
-            <div class="metric-card">
-                <div class="metric-number">{total_quality_issues}</div>
-                <div class="metric-label">Problemas de Calidad</div>
-            </div>
-            
-            <div class="metric-card">
-                <div class="metric-number">{avg_security_score:.1f}</div>
-                <div class="metric-label">Puntuación Seguridad</div>
-            </div>
-        </div>
-        
-        <div class="files-section">
-            <h2>📁 Análisis por Archivo</h2>
-"""
-    
-    # Agregar resultados por archivo
-    for filename, results in ai_results.items():
-        if isinstance(results, dict):
-            file_type = results.get('file_type', 'unknown')
-            is_pom = file_type == 'pom'
-            
-            header_class = 'pom-header' if is_pom else ''
-            file_icon = '📦' if is_pom else '📄'
-            
-            html_content += f"""
-            <div class="file-card">
-                <div class="file-header {header_class}">
-                    <div>{file_icon} {filename}</div>
-                    <div class="file-type-badge">{file_type.upper()}</div>
-                </div>
-                <div class="file-content">
-"""
-            
-            # Análisis de Seguridad
-            html_content += f"""
-                    <div class="analysis-section">
-                        <h3 class="section-title">🔒 Análisis de Seguridad{' - Maven POM' if is_pom else ''}</h3>
-"""
-            
-            vulnerabilities = results.get('vulnerabilities', [])
-            if vulnerabilities:
-                for vuln in vulnerabilities:
-                    severity = vuln.get('severity', 'LOW')
-                    card_class = 'pom-vulnerability-card' if is_pom else 'vulnerability-card'
-                    
-                    html_content += f"""
-                        <div class="issue-card {card_class}">
-                            <div class="issue-header">
-                                <div class="issue-title">
-                                    {vuln.get('type', 'Unknown Vulnerability')}
-                                    {f'<span class="cve-badge">{vuln.get("cve_id", "")}</span>' if vuln.get('cve_id') else ''}
-                                </div>
-                                <div class="severity-badge severity-{severity.lower()}-bg">{severity}</div>
-                            </div>
-                            <div class="issue-details">
-                                <div class="detail-item">
-                                    <div class="detail-label">📍 Ubicación:</div>
-                                    <div class="detail-content">{vuln.get('line', 'N/A')}</div>
-                                </div>
-                                <div class="detail-item">
-                                    <div class="detail-label">📝 Descripción:</div>
-                                    <div class="detail-content">{vuln.get('description', 'N/A')}</div>
-                                </div>
-                                <div class="detail-item">
-                                    <div class="detail-label">💥 Impacto:</div>
-                                    <div class="detail-content">{vuln.get('impact', 'N/A')}</div>
-                                </div>
-                                <div class="detail-item">
-                                    <div class="detail-label">💡 Recomendación:</div>
-                                    <div class="detail-content">{vuln.get('recommendation', 'N/A')}</div>
-                                </div>
-"""
-                    
-                    # Información específica para POM
-                    if is_pom and vuln.get('dependency'):
-                        html_content += f"""
-                                <div class="detail-item">
-                                    <div class="detail-label">📦 Dependencia:</div>
-                                    <div class="detail-content">
-                                        <div class="dependency-info">
-                                            <strong>{vuln.get('dependency', 'N/A')}</strong>
-                                        </div>
-                                    </div>
-                                </div>
-"""
-                    
-                    html_content += f"""
-                                <div class="detail-item">
-                                    <div class="detail-label">🔧 Solución:</div>
-                                    <div class="detail-content">
-                                        <div class="code-block">
-                                            <pre>{vuln.get('code_correction_suggested', 'N/A')}</pre>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-"""
-            else:
+        # Agregar resultados por archivo
+        for filename, results in ai_results.items():
+            if isinstance(results, dict):
+                file_type = results.get('file_type', 'unknown')
+                is_pom = file_type == 'pom'
+                
+                header_class = 'pom-header' if is_pom else ''
+                file_icon = '📦' if is_pom else '📄'
+                
                 html_content += f"""
-                        <div class="no-issues">
-                            ✅ No se encontraron vulnerabilidades de seguridad{' en el POM' if is_pom else ''}
-                        </div>
-"""
-            
-            html_content += """
+                <div class="file-card">
+                    <div class="file-header {header_class}">
+                        <div>{file_icon} {filename}</div>
+                        <div class="file-type-badge">{file_type.upper()}</div>
                     </div>
-"""
-            
-            # Análisis de Calidad (solo para archivos Java)
-            if not is_pom:
-                html_content += """
-                    <div class="analysis-section">
-                        <h3 class="section-title">⚡ Análisis de Calidad</h3>
-"""
+                    <div class="file-content">
+    """
                 
-                quality_issues = results.get('quality_issues', [])
-                if quality_issues:
-                    for issue in quality_issues:
-                        severity = issue.get('severity', 'LOW')
+                # Análisis de Seguridad
+                html_content += f"""
+                        <div class="analysis-section">
+                            <h3 class="section-title">🔒 Análisis de Seguridad{' - Maven POM' if is_pom else ''}</h3>
+    """
+                
+                vulnerabilities = results.get('vulnerabilities', [])
+                if vulnerabilities:
+                    for vuln in vulnerabilities:
+                        severity = vuln.get('severity', 'LOW')
+                        card_class = 'pom-vulnerability-card' if is_pom else 'vulnerability-card'
+                        
                         html_content += f"""
-                        <div class="issue-card quality-card">
-                            <div class="issue-header">
-                                <div class="issue-title">{issue.get('type', 'Unknown Issue')}</div>
-                                <div class="severity-badge severity-{severity.lower()}-bg">{severity}</div>
-                            </div>
-                            <div class="issue-details">
-                                <div class="detail-item">
-                                    <div class="detail-label">📍 Línea:</div>
-                                    <div class="detail-content">{issue.get('line', 'N/A')}</div>
+                            <div class="issue-card {card_class}">
+                                <div class="issue-header">
+                                    <div class="issue-title">
+                                        {vuln.get('type', 'Unknown Vulnerability')}
+                                        {f'<span class="cve-badge">{vuln.get("cve_id", "")}</span>' if vuln.get('cve_id') else ''}
+                                    </div>
+                                    <div class="severity-badge severity-{severity.lower()}-bg">{severity}</div>
                                 </div>
-                                <div class="detail-item">
-                                    <div class="detail-label">📝 Descripción:</div>
-                                    <div class="detail-content">{issue.get('description', 'N/A')}</div>
-                                </div>
-                                <div class="detail-item">
-                                    <div class="detail-label">🏷️ Categoría:</div>
-                                    <div class="detail-content">{issue.get('category', 'N/A')}</div>
-                                </div>
-                                <div class="detail-item">
-                                    <div class="detail-label">⏱️ Esfuerzo:</div>
-                                    <div class="detail-content">{issue.get('effort', 'N/A')} min</div>
-                                </div>
-                                <div class="detail-item">
-                                    <div class="detail-label">💡 Recomendación:</div>
-                                    <div class="detail-content">{issue.get('recommendation', 'N/A')}</div>
-                                </div>
-                                <div class="detail-item">
-                                    <div class="detail-label">🔧 Solución:</div>
-                                    <div class="detail-content">
-                                        <div class="code-block">
-                                            <pre>{issue.get('code_correction_suggested', 'N/A')}</pre>
+                                <div class="issue-details">
+                                    <div class="detail-item">
+                                        <div class="detail-label">📍 Ubicación:</div>
+                                        <div class="detail-content">{vuln.get('line', 'N/A')}</div>
+                                    </div>
+                                    <div class="detail-item">
+                                        <div class="detail-label">📝 Descripción:</div>
+                                        <div class="detail-content">{vuln.get('description', 'N/A')}</div>
+                                    </div>
+                                    <div class="detail-item">
+                                        <div class="detail-label">💥 Impacto:</div>
+                                        <div class="detail-content">{vuln.get('impact', 'N/A')}</div>
+                                    </div>
+                                    <div class="detail-item">
+                                        <div class="detail-label">💡 Recomendación:</div>
+                                        <div class="detail-content">{vuln.get('recommendation', 'N/A')}</div>
+                                    </div>
+    """
+                        
+                        # Información específica para POM
+                        if is_pom and vuln.get('dependency'):
+                            html_content += f"""
+                                    <div class="detail-item">
+                                        <div class="detail-label">📦 Dependencia:</div>
+                                        <div class="detail-content">
+                                            <div class="dependency-info">
+                                                <strong>{vuln.get('dependency', 'N/A')}</strong>
+                                            </div>
+                                        </div>
+                                    </div>
+    """
+                        
+                        html_content += f"""
+                                    <div class="detail-item">
+                                        <div class="detail-label">🔧 Solución:</div>
+                                        <div class="detail-content">
+                                            <div class="code-block">
+                                                <pre>{vuln.get('code_correction_suggested', 'N/A')}</pre>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
-                        </div>
-"""
+    """
                 else:
-                    html_content += """
-                        <div class="no-issues">
-                            ✅ No se encontraron problemas significativos de calidad
-                        </div>
-"""
-                
-                html_content += """
-                    </div>
-"""
-            
-            # Mostrar dependencias desactualizadas si es POM
-            if is_pom and results.get('outdated_dependencies'):
-                html_content += """
-                    <div class="analysis-section">
-                        <h3 class="section-title">📦 Dependencias Desactualizadas</h3>
-"""
-                
-                for dep in results.get('outdated_dependencies', []):
                     html_content += f"""
-                        <div class="issue-card">
-                            <div class="issue-header">
-                                <div class="issue-title">{dep.get('dependency', 'N/A')}</div>
-                                <div class="severity-badge severity-medium-bg">OUTDATED</div>
+                            <div class="no-issues">
+                                ✅ No se encontraron vulnerabilidades de seguridad{' en el POM' if is_pom else ''}
                             </div>
-                            <div class="issue-details">
-                                <div class="detail-item">
-                                    <div class="detail-label">📍 Versión Actual:</div>
-                                    <div class="detail-content">{dep.get('current_version', 'N/A')}</div>
-                                </div>
-                                <div class="detail-item">
-                                    <div class="detail-label">🆕 Versión Recomendada:</div>
-                                    <div class="detail-content">{dep.get('latest_version', 'N/A')}</div>
-                                </div>
-                                <div class="detail-item">
-                                    <div class="detail-label">🔒 Riesgo de Seguridad:</div>
-                                    <div class="detail-content">{dep.get('security_risk', 'N/A')}</div>
-                                </div>
-                            </div>
+    """
+                
+                html_content += """
                         </div>
-"""
+    """
+                
+                # Análisis de Calidad (solo para archivos Java)
+                if not is_pom:
+                    html_content += """
+                        <div class="analysis-section">
+                            <h3 class="section-title">⚡ Análisis de Calidad</h3>
+    """
+                    
+                    quality_issues = results.get('quality_issues', [])
+                    if quality_issues:
+                        for issue in quality_issues:
+                            severity = issue.get('severity', 'LOW')
+                            html_content += f"""
+                            <div class="issue-card quality-card">
+                                <div class="issue-header">
+                                    <div class="issue-title">{issue.get('type', 'Unknown Issue')}</div>
+                                    <div class="severity-badge severity-{severity.lower()}-bg">{severity}</div>
+                                </div>
+                                <div class="issue-details">
+                                    <div class="detail-item">
+                                        <div class="detail-label">📍 Línea:</div>
+                                        <div class="detail-content">{issue.get('line', 'N/A')}</div>
+                                    </div>
+                                    <div class="detail-item">
+                                        <div class="detail-label">📝 Descripción:</div>
+                                        <div class="detail-content">{issue.get('description', 'N/A')}</div>
+                                    </div>
+                                    <div class="detail-item">
+                                        <div class="detail-label">🏷️ Categoría:</div>
+                                        <div class="detail-content">{issue.get('category', 'N/A')}</div>
+                                    </div>
+                                    <div class="detail-item">
+                                        <div class="detail-label">⏱️ Esfuerzo:</div>
+                                        <div class="detail-content">{issue.get('effort', 'N/A')} min</div>
+                                    </div>
+                                    <div class="detail-item">
+                                        <div class="detail-label">💡 Recomendación:</div>
+                                        <div class="detail-content">{issue.get('recommendation', 'N/A')}</div>
+                                    </div>
+                                    <div class="detail-item">
+                                        <div class="detail-label">🔧 Solución:</div>
+                                        <div class="detail-content">
+                                            <div class="code-block">
+                                                <pre>{issue.get('code_correction_suggested', 'N/A')}</pre>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+    """
+                    else:
+                        html_content += """
+                            <div class="no-issues">
+                                ✅ No se encontraron problemas significativos de calidad
+                            </div>
+    """
+                    
+                    html_content += """
+                        </div>
+    """
+                
+                # Mostrar dependencias desactualizadas si es POM
+                if is_pom and results.get('outdated_dependencies'):
+                    html_content += """
+                        <div class="analysis-section">
+                            <h3 class="section-title">📦 Dependencias Desactualizadas</h3>
+    """
+                    
+                    for dep in results.get('outdated_dependencies', []):
+                        html_content += f"""
+                            <div class="issue-card">
+                                <div class="issue-header">
+                                    <div class="issue-title">{dep.get('dependency', 'N/A')}</div>
+                                    <div class="severity-badge severity-medium-bg">OUTDATED</div>
+                                </div>
+                                <div class="issue-details">
+                                    <div class="detail-item">
+                                        <div class="detail-label">📍 Versión Actual:</div>
+                                        <div class="detail-content">{dep.get('current_version', 'N/A')}</div>
+                                    </div>
+                                    <div class="detail-item">
+                                        <div class="detail-label">🆕 Versión Recomendada:</div>
+                                        <div class="detail-content">{dep.get('latest_version', 'N/A')}</div>
+                                    </div>
+                                    <div class="detail-item">
+                                        <div class="detail-label">🔒 Riesgo de Seguridad:</div>
+                                        <div class="detail-content">{dep.get('security_risk', 'N/A')}</div>
+                                    </div>
+                                </div>
+                            </div>
+    """
+                    
+                    html_content += """
+                        </div>
+    """
                 
                 html_content += """
                     </div>
-"""
-            
-            html_content += """
                 </div>
-            </div>
-"""
-    
-    html_content += """
-        </div>
+    """
         
-        <div class="footer">
-            <p>🤖 Reporte generado automáticamente por AI Code Analyzer</p>
-            <p>Para más información sobre las vulnerabilidades, consulta OWASP Top 10 y CWE</p>
+        html_content += """
+            </div>
+            
+            <div class="footer">
+                <p>🤖 Reporte generado automáticamente por AI Code Analyzer</p>
+                <p>Para más información sobre las vulnerabilidades, consulta OWASP Top 10 y CWE</p>
+            </div>
         </div>
-    </div>
-</body>
-</html>
-"""
-    
-    # Guardar archivo HTML
-    with open("ai-analysis-report.html", "w", encoding="utf-8") as f:
-        f.write(html_content)
-    
-    # También generar JSON para quality gates
-    report_json = {
-        "timestamp": timestamp,
-        "analysis_duration_seconds": round(analysis_duration, 2),
-        "model_used": model_used,
-        "overall_score": overall_score,
-        "security_score": avg_security_score,
-        "quality_score": avg_quality_score,
-        "quality_gate_status": quality_gate_status,
-        "summary": {
-            "total_vulnerabilities": total_vulnerabilities,
-            "high_severity_vulnerabilities": high_severity_vulns,
-            "medium_severity_vulnerabilities": medium_severity_vulns,
-            "low_severity_vulnerabilities": low_severity_vulns,
-            "total_quality_issues": total_quality_issues,
-            "files_analyzed": len(ai_results),
-            "java_files_analyzed": java_files_count,
-            "pom_files_analyzed": pom_files_count
-        },
-        "detailed_results": ai_results
-    }
-    
-    with open("analysis-results.json", "w", encoding="utf-8") as f:
-        json.dump(report_json, f, indent=2, ensure_ascii=False)
+    </body>
+    </html>
+    """
+        
+        # Guardar archivo HTML
+        with open("ai-analysis-report.html", "w", encoding="utf-8") as f:
+            f.write(html_content)
+        
+        # También generar JSON para quality gates
+        report_json = {
+            "timestamp": timestamp,
+            "analysis_duration_seconds": round(analysis_duration, 2),
+            "model_used": model_used,
+            "overall_score": overall_score,
+            "security_score": avg_security_score,
+            "quality_score": avg_quality_score,
+            "quality_gate_status": quality_gate_status,
+            "summary": {
+                "total_vulnerabilities": total_vulnerabilities,
+                "high_severity_vulnerabilities": high_severity_vulns,
+                "medium_severity_vulnerabilities": medium_severity_vulns,
+                "low_severity_vulnerabilities": low_severity_vulns,
+                "total_quality_issues": total_quality_issues,
+                "files_analyzed": len(ai_results),
+                "java_files_analyzed": java_files_count,
+                "pom_files_analyzed": pom_files_count
+            },
+            "detailed_results": ai_results
+        }
+        
+        with open("analysis-results.json", "w", encoding="utf-8") as f:
+            json.dump(report_json, f, indent=2, ensure_ascii=False)
 
 def find_java_files(directory):
     """Buscar archivos Java en un directorio"""
