@@ -13,7 +13,7 @@ pipeline {
         SCAN_RESULTS_DIR = 'scan-results'
         PROJECT_NAME = 'demo'
         // Definir el directorio de análisis aquí
-        JAVA_ANALYSIS_DIR = '../demo/src'  // Cambiar esta ruta según necesites
+        JAVA_ANALYSIS_DIR = '../demo'  // Cambiar esta ruta según necesites
         MAX_FILES_TO_ANALYZE = '10'        // Cambiar este número según necesites
         AI_MODEL="google/gemini-2.0-flash-exp:free"
     }
