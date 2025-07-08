@@ -1142,31 +1142,10 @@ def main():
     # Generar timestamp
     timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     
-    report_json = {
-        "timestamp": timestamp,
-        "analysis_duration_seconds": round(analysis_duration, 2),
-        "model_used": model_name,
-        "overall_score": overall_score,
-        "security_score": avg_security_score,
-        "quality_score": avg_quality_score,
-        "quality_gate_status": quality_gate_status,
-        "summary": {
-            "total_vulnerabilities": total_vulnerabilities,
-            "high_severity_vulnerabilities": high_severity_vulns,
-            "medium_severity_vulnerabilities": medium_severity_vulns,
-            "low_severity_vulnerabilities": low_severity_vulns,
-            "total_quality_issues": total_quality_issues,
-            "files_analyzed": len(ai_results),
-            "java_files_analyzed": len([f for f in ai_results.keys() if ai_results[f].get('file_type') == 'java']),
-            "pom_files_analyzed": len([f for f in ai_results.keys() if ai_results[f].get('file_type') == 'pom'])
-        },
-        "detailed_results": ai_results
-    }
-    
-    with open("analysis-results.json", "w", encoding="utf-8") as f:
-        json.dump(report_json, f, indent=2, ensure_ascii=False)
+    analyzer.generate_report(ai_results, analysis_duration, model_name)
     
     print("✅ Análisis completado. Resultado guardado en:")
+    print("- ai-analysis-report.html")
     print("- analysis-results.json")
     print(f"📊 Puntuación general: {overall_score:.1f}/10")
     print(f"🚦 Quality Gate: {quality_gate_status}")
