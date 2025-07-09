@@ -88,6 +88,7 @@ public class WelcomeController {
         byte[] digest = md.digest(data.getBytes(StandardCharsets.UTF_8));
         return Base64.getEncoder().encodeToString(digest);
     }
+    
 
     // SOLUCIÓN (Cifrado simétrico débil): Se usa un modo seguro (GCM) y un Vector de Inicialización (IV) aleatorio.
     @GetMapping("/api/encrypt")
