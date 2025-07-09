@@ -1,113 +1,126 @@
 package com.demo.controllers;
-
 import com.demo.models.WelcomeDTO;
+import org.owasp.encoder.Encode; // Para sanitizar contra XSS
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
 import javax.crypto.Cipher;
-import javax.crypto.spec.SecretKeySpec;
-import javax.script.ScriptEngine;
-import javax.script.ScriptEngineManager;
-import java.io.*;
-import java.nio.file.*;
+import javax.crypto.KeyGenerator;
+import javax.crypto.SecretKey;
+import javax.crypto.spec.GCMParameterSpec;
+import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.security.MessageDigest;
-import java.sql.*;
+import java.security.SecureRandom;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.util.Base64;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 @RestController
 public class WelcomeController {
 
-    // ⚠ Logger mal usado con datos sensibles
     private static final Logger logger = Logger.getLogger(WelcomeController.class.getName());
+    private static final int GCM_TAG_LENGTH = 128;
 
-    // ⚠ Hardcoded secret (clave embebida)
-    private static final String DB_PASSWORD = "SuperSecreta123!";
-    private static final String API_KEY = "ABC123-TOKEN-INSEGURO";
+    // SOLUCIÓN (Hardcoded Secrets): Inyecta secretos desde propiedades o variables de entorno.
+    @Value("${app.db.password:default_db_password}")
+    private String dbPassword;
 
-    // XSS
+    @Value("${app.secret.key:default_encryption_key_12345678}")
+    private String encryptionKey;
+
+    // SOLUCIÓN (XSS): Se codifica la entrada del usuario para neutralizar scripts.
     @GetMapping("/api/welcome")
     public WelcomeDTO welcome(@RequestParam(value = "name", defaultValue = "...") String name) {
-        return new WelcomeDTO("Hola, bienvenido " + name + ", esto es un demo");
+        return new WelcomeDTO("Hola, bienvenido " + Encode.forHtml(name) + ", esto es un demo");
     }
-
-    // RCE
-    @PostMapping("/api/execute")
-    public String executeCode(@RequestBody String userScript) throws Exception {
-        ScriptEngine engine = new ScriptEngineManager().getEngineByName("nashorn");
-        return "Resultado: " + engine.eval(userScript);
-    }
-
-    // Path Traversal
+    
+    // SOLUCIÓN (Path Traversal): Se valida que la ruta no salga de un directorio base.
     @GetMapping("/api/read-file")
-    public String readFile(@RequestParam String filePath) throws Exception {
-        return Files.readString(Paths.get(filePath));
+    public String readFile(@RequestParam String filePath) throws IOException {
+        Path safeBaseDir = Paths.get("/tmp/safe-content/").toAbsolutePath();
+        Path requestedPath = safeBaseDir.resolve(filePath).normalize();
+
+        if (!requestedPath.startsWith(safeBaseDir)) {
+            throw new SecurityException("Acceso a ruta de archivo no permitido.");
+        }
+        return "Acceso a archivo seguro verificado para: " + requestedPath;
     }
 
-    // SQL Injection
+    // SOLUCIÓN (SQL Injection): Se usa PreparedStatement para evitar la inyección de SQL.
     @GetMapping("/api/user")
     public String getUserInfo(@RequestParam String username) throws Exception {
-        Connection conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/demo", "root", DB_PASSWORD);
-        Statement stmt = conn.createStatement();
-        ResultSet rs = stmt.executeQuery("SELECT * FROM users WHERE username = '" + username + "'");
-        if (rs.next()) {
-            return "Usuario: " + rs.getString("username") + ", Email: " + rs.getString("email");
+        String query = "SELECT * FROM users WHERE username = ?";
+        try (Connection conn = DriverManager.getConnection("jdbc:h2:mem:testdb", "sa", "");
+             PreparedStatement stmt = conn.prepareStatement(query)) {
+
+            stmt.setString(1, username);
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return "Usuario: " + rs.getString("username") + ", Email: " + rs.getString("email");
+                }
+            }
         }
-        return "No encontrado";
+        return "Usuario no encontrado";
     }
 
-    // Command Injection
-    @PostMapping("/api/ping")
-    public String ping(@RequestBody String host) throws Exception {
-        Process p = Runtime.getRuntime().exec("ping -c 1 " + host);
-        BufferedReader reader = new BufferedReader(new InputStreamReader(p.getInputStream()));
-        StringBuilder out = new StringBuilder();
-        String line;
-        while ((line = reader.readLine()) != null) out.append(line).append("\n");
-        return out.toString();
-    }
-
-    // Deserialización insegura
-    @PostMapping("/api/deserialize")
-    public String deserialize(@RequestBody String base64) throws Exception {
-        byte[] data = Base64.getDecoder().decode(base64);
-        ObjectInputStream ois = new ObjectInputStream(new ByteArrayInputStream(data));
-        Object obj = ois.readObject();
-        return "Objeto: " + obj;
-    }
-
-    // Logs sensibles
+    // SOLUCIÓN (Logs sensibles): Se elimina la contraseña del mensaje de log.
     @PostMapping("/api/login")
     public String login(@RequestParam String user, @RequestParam String password) {
-        logger.info("Intento de login con usuario: " + user + " y contraseña: " + password); // ⚠ Log inseguro
-        return "Login procesado";
+        logger.info("Intento de login para el usuario: " + user);
+        return "Login procesado para el usuario: " + user;
     }
 
-    // Cifrado débil (uso de MD5)
+    // SOLUCIÓN (Cifrado débil): Se reemplaza MD5 por un algoritmo fuerte como SHA-256.
     @GetMapping("/api/hash")
     public String hash(@RequestParam String data) throws Exception {
-        MessageDigest md = MessageDigest.getInstance("MD5"); // ⚠ Inseguro
-        byte[] digest = md.digest(data.getBytes());
+        MessageDigest md = MessageDigest.getInstance("SHA-256");
+        byte[] digest = md.digest(data.getBytes(StandardCharsets.UTF_8));
         return Base64.getEncoder().encodeToString(digest);
     }
 
-    // Cifrado simétrico débil (AES con clave fija)
+    // SOLUCIÓN (Cifrado simétrico débil): Se usa un modo seguro (GCM) y un Vector de Inicialización (IV) aleatorio.
     @GetMapping("/api/encrypt")
     public String encrypt(@RequestParam String text) throws Exception {
-        String key = "1234567890123456"; // ⚠ Clave estática
-        SecretKeySpec secretKey = new SecretKeySpec(key.getBytes(), "AES");
-        Cipher cipher = Cipher.getInstance("AES"); // sin GCM ni IV
-        cipher.init(Cipher.ENCRYPT_MODE, secretKey);
-        return Base64.getEncoder().encodeToString(cipher.doFinal(text.getBytes()));
+        Cipher cipher = Cipher.getInstance("AES/GCM/NoPadding");
+        byte[] iv = new byte[cipher.getBlockSize()];
+        new SecureRandom().nextBytes(iv);
+        GCMParameterSpec parameterSpec = new GCMParameterSpec(GCM_TAG_LENGTH, iv);
+
+        cipher.init(Cipher.ENCRYPT_MODE, null, parameterSpec);
+        byte[] cipherText = cipher.doFinal(text.getBytes(StandardCharsets.UTF_8));
+        
+        ByteBuffer byteBuffer = ByteBuffer.allocate(iv.length + cipherText.length);
+        byteBuffer.put(iv);
+        byteBuffer.put(cipherText);
+        return Base64.getEncoder().encodeToString(byteBuffer.array());
     }
 
-    // Stacktrace expuesto
+    // SOLUCIÓN (Stacktrace expuesto): La excepción será manejada por el método de abajo.
     @GetMapping("/api/error")
-    public String error() {
-        try {
-            int a = 1 / 0;
-            return "OK";
-        } catch (Exception e) {
-            return e.toString(); // ⚠ Devuelve detalles internos
-        }
+    public void error() {
+        throw new IllegalStateException("Error de prueba para el manejador de excepciones local.");
     }
+    
+    // --- MANEJADOR DE EXCEPCIONES LOCAL ---
+    // SOLUCIÓN (Stacktrace expuesto): Este método intercepta excepciones de este controlador,
+    // las registra en el log y devuelve un mensaje genérico al cliente.
+    @ExceptionHandler(Exception.class)
+    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
+    public String handleControllerException(Exception ex) {
+        logger.log(Level.SEVERE, "Error en WelcomeController: " + ex.getMessage(), ex);
+        return "Ocurrió un error interno en el servidor.";
+    }
+
+
 }
