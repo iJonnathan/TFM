@@ -1,6 +1,5 @@
 package com.demo.controllers;
 import com.demo.models.WelcomeDTO;
-import org.owasp.encoder.Encode; // Para sanitizar contra XSS
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
@@ -42,7 +41,7 @@ public class WelcomeController {
     // SOLUCIÓN (XSS): Se codifica la entrada del usuario para neutralizar scripts.
     @GetMapping("/api/welcome")
     public WelcomeDTO welcome(@RequestParam(value = "name", defaultValue = "...") String name) {
-        return new WelcomeDTO("Hola, bienvenido " + Encode.forHtml(name) + ", esto es un demo");
+        return new WelcomeDTO("Hola, bienvenido " +name + ", esto es un demo");
     }
     
     // SOLUCIÓN (Path Traversal): Se valida que la ruta no salga de un directorio base.
