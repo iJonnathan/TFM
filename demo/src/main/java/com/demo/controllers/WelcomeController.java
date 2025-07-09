@@ -31,12 +31,7 @@ public class WelcomeController {
     private static final Logger logger = Logger.getLogger(WelcomeController.class.getName());
     private static final int GCM_TAG_LENGTH = 128;
 
-    // SOLUCIÓN (Hardcoded Secrets): Inyecta secretos desde propiedades o variables de entorno.
-    @Value("${app.db.password:default_db_password}")
-    private String dbPassword;
 
-    @Value("${app.secret.key:default_encryption_key_12345678}")
-    private String encryptionKey;
 
     // SOLUCIÓN (XSS): Se codifica la entrada del usuario para neutralizar scripts.
     @GetMapping("/api/welcome")
