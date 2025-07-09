@@ -15,7 +15,7 @@ pipeline {
         // Definir el directorio de análisis aquí
         JAVA_ANALYSIS_DIR = '../demo'  // Cambiar esta ruta según necesites
         MAX_FILES_TO_ANALYZE = '10'        // Cambiar este número según necesites
-        AI_MODEL = "agentica-org/deepcoder-14b-preview:free"
+        AI_MODEL = "mistralai/mistral-small-3.2-24b-instruct:free"
     }
     
 
