@@ -4,12 +4,18 @@ pipeline {
     // 'agent any' significa que Jenkins asignará este pipeline a cualquier agente disponible.
     agent any
 
+    tools {
+        maven 'MAVEN'
+    }
+
 
     environment {
-        // Configurar la API key de OpenRouter como variable de entorno segura
-        OPENROUTER_API_KEY = "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"
         SCAN_RESULTS_DIR = 'scan-results'
         PROJECT_NAME = 'demo'
+        // Definir el directorio de análisis aquí
+        JAVA_ANALYSIS_DIR = '../demo'  // Cambiar esta ruta según necesites
+        MAX_FILES_TO_ANALYZE = '10'        // Cambiar este número según necesites
+        AI_MODEL = "mistralai/mistral-small-3.2-24b-instruct:free"
     }
     
 
@@ -26,31 +32,6 @@ pipeline {
             }
         }
 
-        // Etapa 2: Build - Compilar el código y empaquetar la aplicación con Maven.
-        stage('Build') {
-            steps {
-                echo '>>> Stage: Build - Compilando y empaquetando con Maven...'
-                // **CAMBIO CRÍTICO:** Usamos 'dir' para movernos al subdirectorio 'demo'
-                // donde se encuentra el pom.xml de tu aplicación Maven.
-                dir('demo') {
-                    // Ahora, ejecutamos el comando Maven desde dentro del directorio 'demo/'.
-                    // Esto limpia, compila el código, ejecuta las pruebas unitarias y crea el JAR
-                    // ejecutable en 'demo/target/'.
-                    sh 'mvn clean package'
-                }
-            }
-        }
-
-        // Etapa 3: Unit Test Reports - Publicar los resultados de las pruebas unitarias.
-        stage('Unit Test Reports') {
-            steps {
-                echo '>>> Stage: Unit Test Reports - Publicando resultados de pruebas unitarias...'
-                // Los reportes de pruebas están en 'demo/target/surefire-reports/'.
-                // La ruta es relativa a la raíz del workspace de Jenkins (TFM/).
-                junit 'demo/target/surefire-reports/*.xml'
-            }
-        }
-
 
         stage('Checkout & Build') {
             steps {
@@ -64,187 +45,38 @@ pipeline {
                 // Crear directorio para resultados
                 sh "mkdir -p ${SCAN_RESULTS_DIR}"
                 
-                dir('demo') {
-                    sh "mvn -Dmaven.test.failure.ignore=true clean package"
-                }
+                
             }
-        }
+        }        
         
-        stage('Static Analysis') {
-            parallel {
-                stage('OWASP Dependency Check') {
-                    steps {
-                        dir('demo') {
-                            script {
-                                try {
-                                    // Ejecutar OWASP Dependency Check
-                                    sh """
-                                        mvn org.owasp:dependency-check-maven:check \
-                                        -Dformat=JSON \
-                                        -DfailBuildOnCVSS=0 \
-                                        -DsuppressedVulnerabilityFiles=.dependency-check-suppressions.xml
-                                    """
-                                    
-                                    // Copiar resultados al directorio de scan
-                                    sh "cp target/dependency-check-report.json ../${SCAN_RESULTS_DIR}/ || echo 'No OWASP report found'"
-                                } catch (Exception e) {
-                                    echo "OWASP Dependency Check failed: ${e.getMessage()}"
-                                    // Crear archivo vacío para que el análisis AI continue
-                                    sh "echo '{}' > ../${SCAN_RESULTS_DIR}/dependency-check-report.json"
-                                }
-                            }
-                        }
-                    }
-                }
-                
-                stage('SpotBugs Analysis') {
-                    steps {
-                        dir('demo') {
-                            script {
-                                try {
-                                    sh "mvn compile spotbugs:spotbugs"
-                                    sh "cp target/spotbugsXml.xml ../${SCAN_RESULTS_DIR}/ || echo 'No SpotBugs report found'"
-                                } catch (Exception e) {
-                                    echo "SpotBugs analysis failed: ${e.getMessage()}"
-                                    sh "echo '<BugCollection></BugCollection>' > ../${SCAN_RESULTS_DIR}/spotbugsXml.xml"
-                                }
-                            }
-                        }
-                    }
-                }
-                
-                stage('Collect Source Files') {
-                    steps {
-                        script {
-                            // Recopilar archivos Java para análisis AI
+        stage('AI-Powered Analysis') {
+            steps {
+                script {
+                    sh 'pwd'
+                    sh 'cp demo/ai_code_analyzer.py scan-results/'
+
+                    // Ahora, entra al directorio de los resultados.
+                    dir(env.SCAN_RESULTS_DIR) {
+                        // Usar withCredentials para inyectar la API key como variable de entorno
+                        withCredentials([string(credentialsId: 'openrouter-api-key', variable: 'OPENROUTER_API_KEY')]) {
+                            // Ejecutar el script con parámetros
                             sh """
-                                find demo/src -name "*.java" -type f > ${SCAN_RESULTS_DIR}/java-files.txt
-                                echo "Found Java files:"
-                                cat ${SCAN_RESULTS_DIR}/java-files.txt
+                                echo "🚀 Iniciando análisis con IA..."
+                                echo "📂 Directorio: \${JAVA_ANALYSIS_DIR}"
+                                echo "📊 Máximo archivos: \${MAX_FILES_TO_ANALYZE}"
+                                echo "🤖 Modelo IA: \${AI_MODEL}"
+                                
+                                python3 ai_code_analyzer.py \\
+                                    --directory \${JAVA_ANALYSIS_DIR} \\
+                                    --max-files \${MAX_FILES_TO_ANALYZE} \\
+                                    --model \${AI_MODEL}
                             """
                         }
                     }
                 }
             }
-        }
-        
-        stage('AI-Powered Analysis') {
-            steps {
-                script {
-                    // 1. Copia el script a la raíz del workspace. 
-                    //    Aquí, '.' es '/var/lib/jenkins/workspace/ai_analyzer/'.
-                    //sh 'cp /opt/jenkins-scripts/ai_code_analyzer.py .'
-                    sh 'pwd'
-                    sh 'cp demo/ai_code_analyzer.py scan-results/'
+        }    
 
-                    // 2. Ahora, entra al directorio de los resultados.
-                    dir(env.SCAN_RESULTS_DIR) {
-
-                        // 3. Ejecuta el script, que ahora está en el directorio padre ('../').
-                        sh 'python3 ai_code_analyzer.py'
-                    }
-                }
-            }
-        }
-        
-        stage('Quality Gates') {
-            steps {
-                script {
-                    dir(env.SCAN_RESULTS_DIR) {
-                        try {
-                            def analysisResults = readJSON file: 'analysis-results.json'
-                            
-                            def criticalIssues = analysisResults.high_severity_vulnerabilities ?: 0
-                            def totalVulns = analysisResults.total_vulnerabilities ?: 0
-                            def qualityIssues = analysisResults.total_quality_issues ?: 0
-                            
-                            echo "=== QUALITY GATES EVALUATION ==="
-                            echo "High Severity Vulnerabilities: ${criticalIssues}"
-                            echo "Total Vulnerabilities: ${totalVulns}"
-                            echo "Quality Issues: ${qualityIssues}"
-                            
-                            // Definir umbrales
-                            def gates = [
-                                'Critical Vulnerabilities': [threshold: 0, current: criticalIssues],
-                                'Total Vulnerabilities': [threshold: 10, current: totalVulns],
-                                'Quality Issues': [threshold: 20, current: qualityIssues]
-                            ]
-                            
-                            def failed = []
-                            gates.each { gateName, values ->
-                                if (values.current > values.threshold) {
-                                    failed.add("${gateName}: ${values.current} > ${values.threshold}")
-                                } else {
-                                    echo "✅ ${gateName}: ${values.current} <= ${values.threshold} (PASSED)"
-                                }
-                            }
-                            
-                            if (failed.size() > 0) {
-                                echo "❌ Quality gates FAILED:"
-                                failed.each { echo "  - ${it}" }
-                                // Para testing, solo advertir en lugar de fallar
-                                unstable("Quality gates failed: ${failed.join(', ')}")
-                            } else {
-                                echo "✅ All quality gates PASSED!"
-                            }
-                            
-                        } catch (Exception e) {
-                            echo "Warning: Could not evaluate quality gates: ${e.getMessage()}"
-                            unstable("Quality gate evaluation failed")
-                        }
-                    }
-                }
-            }
-        }
-
-
-        // Etapa 4: Debug Path - Paso opcional para depuración
-        stage('Debug Path') {
-            steps {
-                sh 'echo "PATH en Jenkins: $PATH"'
-                sh 'echo "Contenido del workspace (profundidad 2):"'
-                sh 'ls -R -d */* | head -n 20' // Muestra directorios y archivos hasta 2 niveles de profundidad
-                sh 'echo "Contenido de demo/target:"'
-                sh 'ls demo/target/' // Para ver el JAR generado
-            }
-        }
-
-        // Etapa 5: Build Docker Image - Construir la imagen Docker de la aplicación.
-        stage('Build Docker Image') {
-            steps {
-                echo '>>> Stage: Build Docker Image - Construyendo la imagen Docker...'
-                // Es crucial ejecutar 'docker build' desde la raíz del workspace (TFM/).
-                // Esto permite que Docker encuentre el Dockerfile (si está en la raíz)
-                // y acceda al JAR en 'demo/target/' como parte del contexto de construcción.
-                script {
-                    // El comando 'docker build' se ejecuta desde la raíz del repositorio (TFM/).
-                    // -f Dockerfile: especifica que el Dockerfile a usar se llama 'Dockerfile' y está en la raíz del contexto.
-                    // .: el contexto de construcción es la raíz del repositorio (TFM/).
-                    sh 'pwd'
-                    sh 'docker build -f demo/Dockerfile -t demo-app .'
-                }
-            }
-        }
-
-        // Etapa 6: Local Deploy - Desplegar el microservicio localmente como un contenedor Docker.
-        // Detiene y elimina el contenedor anterior si existe, y luego inicia uno nuevo.
-        // Mapear el puerto 9090 del contenedor al 8081 del host.
-        stage('Local Deploy') {
-            steps {
-                echo '>>> Stage: Local Deploy - Desplegando localmente con Docker...'
-                // Estos comandos de Docker operan sobre imágenes y contenedores,
-                // por lo que se pueden ejecutar desde cualquier parte del workspace.
-                sh 'docker stop demo-app || true' // Detiene si existe, '|| true' evita que falle el pipeline si no existe
-                sh 'docker rm demo-app || true'   // Elimina si existe
-
-                // Ejecuta un nuevo contenedor Docker en modo detached (-d).
-                // Mapea el puerto 9090 interno del contenedor (donde Spring Boot escucha)
-                // al puerto 8081 externo en la máquina host de Jenkins.
-                sh 'docker run -d -p 8081:9090 --name demo-app demo-app'
-                echo '>>> El microservicio debería estar accesible localmente en http://localhost:8081'
-                echo '>>> Verifica los logs del contenedor con: docker logs demo-app'
-            }
-        }
     }
 
     // Acciones a realizar después de que todas las etapas se hayan completado.
@@ -266,9 +98,13 @@ pipeline {
                 reportName: 'AI Security & Quality Report',
                 reportTitles: 'AI-Powered Code Analysis'
             ])
+
+            sh 'echo "Ruta actual artifacts"'
+            sh 'pwd'
+            sh 'ls -la'
             
             // Archivar resultados JSON
-            archiveArtifacts artifacts: "${env.SCAN_RESULTS_DIR}/*.json, ${env.SCAN_RESULTS_DIR}/*.html", 
+            archiveArtifacts artifacts: "*.json, *.html", 
                             allowEmptyArchive: true,
                             fingerprint: true
         }
