@@ -1,0 +1,59 @@
+## 📄 **Reporte de Calidad de Código - SonarQube (Community Edition)**
+
+**Fecha del análisis:** (con base en la captura: últimas 6 horas y 1 mes)
+**Total de hallazgos:** 22
+
+---
+
+### 📁 `src/main/java/com/demo/controllers/WelcomeController.java`
+
+**Total de hallazgos:** 18
+
+#### 🔧 Mantenibilidad (Maintainability)
+
+1. L25 - ❌ `Remove this unused 'API_KEY' private field.` *(5min)*
+2. L42, L48, L60, L71, L87, L95 - ❌ `Define and throw a dedicated exception instead of using a generic one.` *(120min)*
+3. L81 - ❌ `Use the built-in formatting to construct this argument.` *(5min)*
+4. L61 - ❌ `Remove this use of "exec"; it is deprecated.` *(15min)*
+5. L107 - ❌ `Remove this useless assignment to local variable "a".` *(5min)*
+
+#### 🔐 Seguridad (Security)
+
+6. L49, L97 - ❌ `Revoke and change this password, as it is compromised.` *(2h)*
+7. L98 - ❌ `Use a secure padding scheme.` *(20min)*
+
+#### ⚙️ Fiabilidad (Reliability)
+
+8. L49, L50 - ❌ `Use try-with-resources or close this "Connection" in a "finally" clause.` *(10min)*
+9. L107 - ❌ `Make sure this expression can't be zero before doing this division.` *(5min)*
+
+#### 📐 Intencionalidad / Consistencia
+
+10. L107 - ❌ `Remove this useless assignment to local variable "a".` *(5min)*
+
+---
+
+### 📁 `src/test/java/com/demo/controller/WelcomeControllerTests.java`
+
+**Total de hallazgos:** 4
+
+#### 🔧 Mantenibilidad (Maintainability)
+
+1. L13 - ❌ `Remove this unused import 'org.hamcrest.Matchers.containsString'.` *(1min)*
+
+#### 📐 Intencionalidad
+
+2. L16, L22, L30 - ❌ `Remove this 'public' modifier.` *(6min)*
+
+---
+
+## 📊 **Resumen Global**
+
+| Categoría       | Cantidad | Tiempo estimado |
+| --------------- | -------- | --------------- |
+| Mantenibilidad  | 11       | \~2h 30min      |
+| Seguridad       | 3        | \~2h 20min      |
+| Fiabilidad      | 3        | \~15min         |
+| Intencionalidad | 4        | \~11min         |
+| **Total**       | 22       | **\~5h 16min**  |
+

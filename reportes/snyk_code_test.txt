@@ -1,0 +1,139 @@
+marco@GUT:~/TFM/demo$ snyk code test
+
+Testing /home/marco/TFM/demo ...
+
+Open Issues
+
+ ✗ [LOW] Use of Password Hash With Insufficient Computational Effort
+   Finding ID: 2e0e0c73-34ec-4f11-bf89-41c83d535f6b
+   Path: src/main/java/com/demo/controllers/WelcomeController.java, line 88
+   Info: The MD5 hash (used in java.security.MessageDigest.getInstance) is insecure. Consider changing it to a secure hash algorithm
+
+ ✗ [LOW] Use of Hardcoded Credentials
+   Finding ID: 98b42372-ced5-4b49-83f4-9375f009f654
+   Path: src/main/java/com/demo/controllers/WelcomeController.java, line 49
+   Info: Do not hardcode credentials in code.
+
+ ✗ [LOW] Use of Hardcoded Credentials
+   Finding ID: 439b05ad-b8d9-4a89-9b26-38a05a03afb2
+   Path: src/main/java/com/demo/controllers/WelcomeController.java, line 49
+   Info: Do not hardcode credentials in code.
+
+ ✗ [LOW] Spring Cross-Site Request Forgery (CSRF)
+   Finding ID: 86daace8-7e92-4797-b49d-12ebb7da849e
+   Path: src/main/java/com/demo/controllers/WelcomeController.java, line 35
+   Info: The userScript parameter is vulnerable to Cross Site Request Forgery (CSRF) attacks due to not using Spring Security. This could allow an attacker to execute requests on a user's behalf. Consider including Spring Security's CSRF protection within your application.
+
+ ✗ [LOW] Spring Cross-Site Request Forgery (CSRF)
+   Finding ID: 7550c897-656a-4392-b9ea-609235fc9a3b
+   Path: src/main/java/com/demo/controllers/WelcomeController.java, line 60
+   Info: The host parameter is vulnerable to Cross Site Request Forgery (CSRF) attacks due to not using Spring Security. This could allow an attacker to execute requests on a user's behalf. Consider including Spring Security's CSRF protection within your application.
+
+ ✗ [LOW] Spring Cross-Site Request Forgery (CSRF)
+   Finding ID: 9ecb5779-e398-474a-9493-938737a6ea7c
+   Path: src/main/java/com/demo/controllers/WelcomeController.java, line 71
+   Info: The base64 parameter is vulnerable to Cross Site Request Forgery (CSRF) attacks due to not using Spring Security. This could allow an attacker to execute requests on a user's behalf. Consider including Spring Security's CSRF protection within your application.
+
+ ✗ [MEDIUM] Use of Hardcoded Passwords
+   Finding ID: 1d6f2ba3-668c-491d-9580-dfd8169ea85f
+   Path: src/main/java/com/demo/controllers/WelcomeController.java, line 24
+   Info: Do not hardcode passwords in code. Found hardcoded password used in here.
+
+ ✗ [MEDIUM] Use of a Broken or Risky Cryptographic Algorithm
+   Finding ID: 27ff85a8-8048-445d-9bbd-0d9dd91eda00
+   Path: src/main/java/com/demo/controllers/WelcomeController.java, line 98
+   Info: The ECB mode used in javax.crypto.Cipher.getInstance does not provide integrity. Consided using Galois/Counter Mode.
+
+ ✗ [MEDIUM] Use of a Broken or Risky Cryptographic Algorithm
+   Finding ID: e5ccebba-0960-4dda-a6df-6010335ee7f6
+   Path: src/main/java/com/demo/controllers/WelcomeController.java, line 98
+   Info: Default AES/ECB algorithm (AES) used in javax.crypto.Cipher.getInstance may be insecure, because equal messages get encrypted to equal data. Consider using Galois/Counter Mode (algorithm AES/GCM/NoPadding).
+
+ ✗ [HIGH] Code Injection
+   Finding ID: 294f13cd-ee0c-4853-9383-bb5951131dd0
+   Path: src/main/java/com/demo/controllers/WelcomeController.java, line 37
+   Info: Unsanitized input from the HTTP request body flows into eval, where it is executed as  code. This may result in a Code Injection vulnerability.
+
+ ✗ [HIGH] Hardcoded Secret
+   Finding ID: 3be5f2e3-9490-4121-a073-fba77f9eb9ef
+   Path: src/main/java/com/demo/controllers/WelcomeController.java, line 97
+   Info: Hardcoded value string is used as a cipher key. Generate the value with a cryptographically strong random number generator such as java.security.SecureRandom instead.
+
+ ✗ [HIGH] Cross-site Scripting (XSS)
+   Finding ID: 056a9ccc-295d-46dc-adf3-82726a398d3a
+   Path: src/main/java/com/demo/controllers/WelcomeController.java, line 53
+   Info: Unsanitized input from an HTTP parameter flows into here, where it is used to render an HTML page returned to the user. This may result in a Cross-Site Scripting attack (XSS).
+
+ ✗ [HIGH] Cross-site Scripting (XSS)
+   Finding ID: ba6cbf86-860e-4971-bc10-aff4f8082a07
+   Path: src/main/java/com/demo/controllers/WelcomeController.java, line 90
+   Info: Unsanitized input from an HTTP parameter flows into here, where it is used to render an HTML page returned to the user. This may result in a Cross-Site Scripting attack (XSS).
+
+ ✗ [HIGH] Cross-site Scripting (XSS)
+   Finding ID: 22be88d5-77b5-4024-b073-bd16aa2dcda1
+   Path: src/main/java/com/demo/controllers/WelcomeController.java, line 100
+   Info: Unsanitized input from an HTTP parameter flows into here, where it is used to render an HTML page returned to the user. This may result in a Cross-Site Scripting attack (XSS).
+
+ ✗ [HIGH] Deserialization of Untrusted Data
+   Finding ID: 91334e26-bcf1-4fe1-a362-27d0c2bbe69d
+   Path: src/main/java/com/demo/controllers/WelcomeController.java, line 73
+   Info: Unsanitized input from the HTTP request body flows into java.io.ObjectInputStream, where it is used to deserialize an object. This may result in an Unsafe Deserialization vulnerability.
+
+ ✗ [HIGH] Cross-site Scripting (XSS)
+   Finding ID: 6c2c8521-7f89-4b66-aa34-8364bd8c3565
+   Path: src/main/java/com/demo/controllers/WelcomeController.java, line 37
+   Info: Unsanitized input from the HTTP request body flows into here, where it is used to render an HTML page returned to the user. This may result in a Cross-Site Scripting attack (XSS).
+
+ ✗ [HIGH] Cross-site Scripting (XSS)
+   Finding ID: 5dbe3cc1-412a-48f0-a301-a461002a7925
+   Path: src/main/java/com/demo/controllers/WelcomeController.java, line 43
+   Info: Unsanitized input from an HTTP parameter flows into here, where it is used to render an HTML page returned to the user. This may result in a Cross-Site Scripting attack (XSS).
+
+ ✗ [HIGH] Cross-site Scripting (XSS)
+   Finding ID: 28e9988d-e1b0-4b03-837a-d7226367de73
+   Path: src/main/java/com/demo/controllers/WelcomeController.java, line 75
+   Info: Unsanitized input from the HTTP request body flows into here, where it is used to render an HTML page returned to the user. This may result in a Cross-Site Scripting attack (XSS).
+
+ ✗ [HIGH] Cross-site Scripting (XSS)
+   Finding ID: 08b4b698-44d1-4d72-aad7-95469f63ecda
+   Path: src/main/java/com/demo/controllers/WelcomeController.java, line 66
+   Info: Unsanitized input from the HTTP request body flows into here, where it is used to render an HTML page returned to the user. This may result in a Cross-Site Scripting attack (XSS).
+
+ ✗ [HIGH] SQL Injection
+   Finding ID: d2dc11ec-461d-492a-b2d7-c9d85343887c
+   Path: src/main/java/com/demo/controllers/WelcomeController.java, line 51
+   Info: Unsanitized input from an HTTP parameter flows into executeQuery, where it is used in an SQL query. This may result in an SQL Injection vulnerability.
+
+ ✗ [HIGH] Path Traversal
+   Finding ID: c679fcec-4ee7-41f8-82f8-a6f81097277b
+   Path: src/main/java/com/demo/controllers/WelcomeController.java, line 43
+   Info: Unsanitized input from an HTTP parameter flows into java.nio.file.Files.readString, where it is used as a path. This may result in a Path Traversal vulnerability and allow an attacker to read arbitrary files.
+
+ ✗ [HIGH] Command Injection
+   Finding ID: 0135ff3c-dbfa-4cf1-8c37-fa34cc8e4db4
+   Path: src/main/java/com/demo/controllers/WelcomeController.java, line 61
+   Info: Unsanitized input from the HTTP request body flows into exec, where it is used as a shell command. This may result in a Command Injection vulnerability.
+
+ ✗ [HIGH] Use of Hardcoded, Security-relevant Constants
+   Finding ID: c461833e-f5d8-46aa-84dc-5672ab42ad3f
+   Path: src/main/java/com/demo/controllers/WelcomeController.java, line 24
+   Info: Avoid hardcoding values that are meant to be secret. Found hardcoded secret.
+
+
+
+╭──────────────────────────────────────────────────────╮
+│ Test Summary                                         │
+│                                                      │
+│   Organization:      marcogutama                     │
+│   Test type:         Static code analysis            │
+│   Project path:      /home/marco/TFM/demo            │
+│                                                      │
+│   Total issues:   23                                 │
+│   Ignored issues: 0 [ 0 HIGH  0 MEDIUM  0 LOW ]      │
+│   Open issues:    23 [ 14 HIGH  3 MEDIUM  6 LOW ]    │
+╰──────────────────────────────────────────────────────╯
+
+💡 Tip
+
+   To view ignored issues, use the --include-ignores option.
+

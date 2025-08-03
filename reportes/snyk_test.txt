@@ -1,0 +1,39 @@
+marco@GUT:~/TFM/demo$ snyk test
+
+Testing /home/marco/TFM/demo...
+
+Tested 37 dependencies for known issues, found 7 issues, 7 vulnerable paths.
+
+
+Issues to fix by upgrading:
+
+  Upgrade org.springframework.boot:spring-boot-starter-web@3.4.5 to org.springframework.boot:spring-boot-starter-web@3.4.7 to fix
+  ✗ Improper Handling of Case Sensitivity [Low Severity][https://security.snyk.io/vuln/SNYK-JAVA-ORGSPRINGFRAMEWORK-10176071] in org.springframework:spring-context@6.2.6
+    introduced by org.springframework.boot:spring-boot-starter-web@3.4.5 > org.springframework:spring-webmvc@6.2.6 > org.springframework:spring-context@6.2.6
+  ✗ Authentication Bypass Using an Alternate Path or Channel [Medium Severity][https://security.snyk.io/vuln/SNYK-JAVA-ORGAPACHETOMCATEMBED-10365310] in org.apache.tomcat.embed:tomcat-embed-core@10.1.40
+    introduced by org.springframework.boot:spring-boot-starter-web@3.4.5 > org.springframework.boot:spring-boot-starter-tomcat@3.4.5 > org.apache.tomcat.embed:tomcat-embed-core@10.1.40
+  ✗ HTTP Response Splitting [Medium Severity][https://security.snyk.io/vuln/SNYK-JAVA-ORGSPRINGFRAMEWORK-10345766] in org.springframework:spring-web@6.2.6
+    introduced by org.springframework.boot:spring-boot-starter-web@3.4.5 > org.springframework:spring-web@6.2.6
+  ✗ Improper Handling of Case Sensitivity [Medium Severity][https://security.snyk.io/vuln/SNYK-JAVA-ORGAPACHETOMCATEMBED-10264469] in org.apache.tomcat.embed:tomcat-embed-core@10.1.40
+    introduced by org.springframework.boot:spring-boot-starter-web@3.4.5 > org.springframework.boot:spring-boot-starter-tomcat@3.4.5 > org.apache.tomcat.embed:tomcat-embed-core@10.1.40
+  ✗ Allocation of Resources Without Limits or Throttling [High Severity][https://security.snyk.io/vuln/SNYK-JAVA-ORGAPACHETOMCATEMBED-10365122] in org.apache.tomcat.embed:tomcat-embed-core@10.1.40
+    introduced by org.springframework.boot:spring-boot-starter-web@3.4.5 > org.springframework.boot:spring-boot-starter-tomcat@3.4.5 > org.apache.tomcat.embed:tomcat-embed-core@10.1.40
+
+
+Issues with no direct upgrade or patch:
+  ✗ Integer Overflow or Wraparound [High Severity][https://security.snyk.io/vuln/SNYK-JAVA-ORGAPACHETOMCATEMBED-10674391] in org.apache.tomcat.embed:tomcat-embed-core@10.1.40
+    introduced by org.springframework.boot:spring-boot-starter-web@3.4.5 > org.springframework.boot:spring-boot-starter-tomcat@3.4.5 > org.apache.tomcat.embed:tomcat-embed-core@10.1.40
+  This issue was fixed in versions: 9.0.107, 10.1.43, 11.0.9
+  ✗ Allocation of Resources Without Limits or Throttling [High Severity][https://security.snyk.io/vuln/SNYK-JAVA-ORGAPACHETOMCATEMBED-10676855] in org.apache.tomcat.embed:tomcat-embed-core@10.1.40
+    introduced by org.springframework.boot:spring-boot-starter-web@3.4.5 > org.springframework.boot:spring-boot-starter-tomcat@3.4.5 > org.apache.tomcat.embed:tomcat-embed-core@10.1.40
+  This issue was fixed in versions: 9.0.107, 10.1.43, 11.0.9
+
+
+
+Organization:      marcogutama
+Package manager:   maven
+Target file:       pom.xml
+Project name:      com:demo
+Open source:       no
+Project path:      /home/marco/TFM/demo
+Licenses:          enabled
