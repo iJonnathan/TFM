@@ -1,0 +1,275 @@
+{
+  "timestamp": "2025-07-08 14:21:53",
+  "analysis_duration_seconds": 1129.13,
+  "model_used": "deepseek/deepseek-r1-0528:free",
+  "overall_score": 2.5,
+  "security_score": 5.0,
+  "quality_score": 0.0,
+  "quality_gate_status": "FAILED",
+  "summary": {
+    "total_vulnerabilities": 13,
+    "high_severity_vulnerabilities": 6,
+    "medium_severity_vulnerabilities": 3,
+    "low_severity_vulnerabilities": 1,
+    "total_quality_issues": 7,
+    "files_analyzed": 5,
+    "java_files_analyzed": 4,
+    "pom_files_analyzed": 1
+  },
+  "detailed_results": {
+    "../demo/src/main/java/com/demo/DemoApplication.java": {
+      "file_type": "java",
+      "vulnerabilities": [],
+      "security_score": "10",
+      "summary": "El código analizado corresponde únicamente a la clase principal de una aplicación Spring Boot, la cual no contiene lógica de negocio ni interacciones con componentes externos (BD, APIs, UI, etc.). No se identificaron vulnerabilidades directas en este fragmento. Sin embargo, la puntuación alta asume que el resto del proyecto implementa buenas prácticas de seguridad (ej: Spring Security, validación de entradas, gestión segura de sesiones). Se recomienda un análisis completo del código base para descartar riesgos en otros módulos.",
+      "error": "Exception: 'choices'"
+    },
+    "../demo/src/main/java/com/demo/controllers/WelcomeController.java": {
+      "file_type": "java",
+      "vulnerabilities": [
+        {
+          "type": "Exposición de información sensible",
+          "severity": "HIGH",
+          "line": "19-20",
+          "description": "Credenciales hardcodeadas (DB_PASSWORD y API_KEY) expuestas en el código",
+          "recommendation": "Usar variables de entorno o un sistema de gestión de secretos",
+          "code_correction_suggested": "Reemplazar con System.getenv(\"DB_PASSWORD\")",
+          "cwe_id": "CWE-798",
+          "impact": "Exposición de credenciales de base de datos y API"
+        },
+        {
+          "type": "Cross-Site Scripting (XSS)",
+          "severity": "MEDIUM",
+          "line": "28",
+          "description": "Parámetro 'name' no sanitizado en respuesta HTML/JS",
+          "recommendation": "Sanitizar entrada con librerías como OWASP Java Encoder",
+          "code_correction_suggested": "String sanitized = Encode.forHtml(name); return new WelcomeDTO(sanitized);",
+          "cwe_id": "CWE-79",
+          "impact": "Ejecución de código arbitrario en navegadores de usuarios"
+        },
+        {
+          "type": "Inyección SQL",
+          "severity": "CRITICAL",
+          "line": "45",
+          "description": "Concatenación directa de parámetro 'username' en consulta SQL",
+          "recommendation": "Usar PreparedStatement con parámetros bindeados",
+          "code_correction_suggested": "PreparedStatement stmt = conn.prepareStatement(\"SELECT * FROM users WHERE username = ?\"); stmt.setString(1, username);",
+          "cwe_id": "CWE-89",
+          "impact": "Exposición/Manipulación de datos sensibles de la base de datos"
+        },
+        {
+          "type": "Command Injection",
+          "severity": "CRITICAL",
+          "line": "54",
+          "description": "Ejecución de comando OS con entrada no validada ('host')",
+          "recommendation": "Validar entrada contra whitelist y usar ProcessBuilder con argumentos separados",
+          "code_correction_suggested": "String[] cmd = {\"ping\", \"-c\", \"1\", host}; Process p = new ProcessBuilder(cmd).start();",
+          "cwe_id": "CWE-78",
+          "impact": "Ejecución remota de comandos arbitrarios en el servidor"
+        },
+        {
+          "type": "Deserialización Insegura",
+          "severity": "CRITICAL",
+          "line": "62",
+          "description": "Deserialización de objetos sin validación",
+          "recommendation": "Implementar ObjectInputFilter para validar clases permitidas",
+          "code_correction_suggested": "ObjectInputFilter filter = ObjectInputFilter.Config.createFilter(\"com.demo.models.*\"); ois.setObjectInputFilter(filter);",
+          "cwe_id": "CWE-502",
+          "impact": "Ejecución remota de código mediante objetos serializados maliciosos"
+        },
+        {
+          "type": "Logging de Datos Sensibles",
+          "severity": "HIGH",
+          "line": "68",
+          "description": "Registro de credenciales en texto plano en logs",
+          "recommendation": "Eliminar datos sensibles de los logs",
+          "code_correction_suggested": "logger.info(\"Intento de login con usuario: \" + user);",
+          "cwe_id": "CWE-532",
+          "impact": "Exposición de credenciales en sistemas de logging"
+        },
+        {
+          "type": "Criptografía Débil (MD5)",
+          "severity": "HIGH",
+          "line": "74",
+          "description": "Uso de algoritmo hash MD5 considerado inseguro",
+          "recommendation": "Usar SHA-256 con salt o funciones modernas como bcrypt",
+          "code_correction_suggested": "MessageDigest md = MessageDigest.getInstance(\"SHA-256\");",
+          "cwe_id": "CWE-328",
+          "impact": "Hashes fácilmente crackeables mediante rainbow tables"
+        },
+        {
+          "type": "Cifrado Inseguro (AES)",
+          "severity": "HIGH",
+          "line": "82",
+          "description": "Clave AES estática y modo ECB inseguro (sin IV)",
+          "recommendation": "Usar clave generada dinámicamente y modo GCM con IV",
+          "code_correction_suggested": "KeyGenerator keyGen = KeyGenerator.getInstance(\"AES\"); keyGen.init(256); SecretKey secretKey = keyGen.generateKey(); Cipher cipher = Cipher.getInstance(\"AES/GCM/NoPadding\");",
+          "cwe_id": "CWE-327",
+          "impact": "Datos cifrados vulnerables a ataques criptoanalíticos"
+        },
+        {
+          "type": "Path Traversal",
+          "severity": "HIGH",
+          "line": "37",
+          "description": "Lectura de archivos con ruta controlada por el usuario",
+          "recommendation": "Validar rutas contra directorios permitidos",
+          "code_correction_suggested": "Path safePath = Paths.get(\"./allowed_dir/\").resolve(filePath).normalize(); if (!safePath.startsWith(\"./allowed_dir/\")) throw...;",
+          "cwe_id": "CWE-22",
+          "impact": "Lectura de archivos sensibles del sistema"
+        },
+        {
+          "type": "Exposición de Stacktrace",
+          "severity": "MEDIUM",
+          "line": "91",
+          "description": "Devolución de detalles de error internos al cliente",
+          "recommendation": "Implementar control centralizado de excepciones con mensajes genéricos",
+          "code_correction_suggested": "return \"Error interno del servidor\";",
+          "cwe_id": "CWE-209",
+          "impact": "Revelación de información técnica útil para atacantes"
+        }
+      ],
+      "security_score": 2,
+      "summary": "El código presenta múltiples vulnerabilidades críticas que permitirían ejecución remota de código (SQLi, RCE, Deserialización), exposición de datos sensibles y fallos criptográficos. Requiere una revisión completa priorizando: 1) Eliminar inyecciones SQL/OS 2) Implementar validación de entrada 3) Corregir prácticas criptográficas 4) Gestionar errores de forma segura. La puntuación baja (2/10) refleja riesgos inaceptables para un entorno productivo.",
+      "error": "No se pudo extraer JSON válido",
+      "raw_content": ""
+    },
+    "../demo/src/main/java/com/demo/models/WelcomeDTO.java": {
+      "file_type": "java",
+      "error": "Exception: 'choices'",
+      "quality_issues": [
+        {
+          "type": "Lack of Immutability",
+          "severity": "LOW",
+          "line": "4, 13-15",
+          "description": "DTOs are typically immutable to prevent unintended state changes. The presence of a setter allows external modification after construction.",
+          "recommendation": "Make the DTO immutable by removing the setter and declaring the field as final.",
+          "code_correction_suggested": "private final String message;\n\npublic WelcomeDTO(String message) {\n    this.message = message;\n}\n\n// Remove setMessage() method",
+          "category": "Maintainability",
+          "effort": "5"
+        },
+        {
+          "type": "Missing equals/hashCode",
+          "severity": "LOW",
+          "line": "3 (class level)",
+          "description": "Class does not override equals() and hashCode(). This may cause unexpected behavior when used in collections.",
+          "recommendation": "Implement equals() and hashCode() based on the message field.",
+          "code_correction_suggested": "@Override\npublic boolean equals(Object o) {\n    if (this == o) return true;\n    if (o == null || getClass() != o.getClass()) return false;\n    WelcomeDTO that = (WelcomeDTO) o;\n    return Objects.equals(message, that.message);\n}\n\n@Override\npublic int hashCode() {\n    return Objects.hash(message);\n}",
+          "category": "Reliability",
+          "effort": "10"
+        },
+        {
+          "type": "Missing toString()",
+          "severity": "LOW",
+          "line": "3 (class level)",
+          "description": "No toString() implementation reduces debuggability and logging clarity.",
+          "recommendation": "Override toString() to provide meaningful string representation.",
+          "code_correction_suggested": "@Override\npublic String toString() {\n    return \"WelcomeDTO{\" +\n            \"message='\" + message + '\\'' +\n            '}';\n}",
+          "category": "Maintainability",
+          "effort": "5"
+        },
+        {
+          "type": "Lack of Documentation",
+          "severity": "LOW",
+          "line": "3 (class level), 5 (constructor), 9 (getter)",
+          "description": "Missing Javadoc comments reduces code understandability and maintainability.",
+          "recommendation": "Add Javadoc to explain the class purpose and usage.",
+          "code_correction_suggested": "/**\n * Data Transfer Object for welcome messages\n */\npublic class WelcomeDTO {\n    /**\n     * Constructs a DTO with specified message\n     * @param message Welcome message content\n     */\n    public WelcomeDTO(String message) { ... }\n\n    /**\n     * @return Current welcome message\n     */\n    public String getMessage() { ... }\n}",
+          "category": "Documentation",
+          "effort": "5"
+        }
+      ],
+      "quality_score": 8,
+      "maintainability_index": 85,
+      "complexity_score": 1,
+      "technical_debt": 25
+    },
+    "../demo/src/test/java/com/demo/controller/WelcomeControllerTests.java": {
+      "file_type": "java",
+      "error": "Exception: 'choices'",
+      "quality_issues": [
+        {
+          "type": "Duplicación de código",
+          "severity": "MEDIUM",
+          "line": "20-30",
+          "description": "Ambos métodos de prueba (welcomeEndpointReturnsDefaultMessage y welcomeEndpointReturnsCustomMessage) repiten las mismas verificaciones de estado, tipo de contenido y estructura JSON, violando el principio DRY.",
+          "recommendation": "Extraer las verificaciones comunes en un método auxiliar reutilizable.",
+          "code_correction_suggested": "private void assertCommonStructure(String expectedMessage) throws Exception {\n    mockMvc.perform(get(\"/api/welcome\"))\n        .andExpect(status().isOk())\n        .andExpect(content().contentType(MediaType.APPLICATION_JSON))\n        .andExpect(jsonPath(\"$.message\").value(expectedMessage));\n}",
+          "category": "Maintainability",
+          "effort": "15"
+        },
+        {
+          "type": "Uso de strings literales",
+          "severity": "LOW",
+          "line": "25, 32",
+          "description": "El tipo de contenido 'application/json' está hardcodeado en lugar de usar la constante MediaType.APPLICATION_JSON_VALUE.",
+          "recommendation": "Usar la constante estática de Spring para mayor seguridad y legibilidad.",
+          "code_correction_suggested": "content().contentType(MediaType.APPLICATION_JSON_VALUE)",
+          "category": "Maintainability",
+          "effort": "5"
+        },
+        {
+          "type": "Documentación insuficiente",
+          "severity": "LOW",
+          "line": "15",
+          "description": "Falta documentación Javadoc para explicar el propósito de la clase de pruebas.",
+          "recommendation": "Agregar comentarios que describan el alcance de las pruebas.",
+          "code_correction_suggested": "/**\n * Pruebas de integración para {@link WelcomeController}.\n * Verifica el comportamiento del endpoint /api/welcome\n */",
+          "category": "Documentation",
+          "effort": "5"
+        }
+      ],
+      "quality_score": "8.2",
+      "maintainability_index": "85",
+      "complexity_score": "2 (ambos métodos tienen complejidad ciclomática 1)",
+      "technical_debt": "25"
+    },
+    "../demo/pom.xml": {
+      "vulnerabilities": [
+        {
+          "type": "Dependency con vulnerabilidades conocidas",
+          "severity": "HIGH",
+          "line": "Línea 35 (dependencia jackson-databind)",
+          "description": "La versión 2.9.8 de jackson-databind contiene múltiples vulnerabilidades críticas de deserialización (CVE-2020-8840, CVE-2019-20330, etc.) que permiten ejecución remota de código (RCE) al procesar contenido malicioso.",
+          "recommendation": "Actualizar a la versión 2.17.0 o superior para parchear las vulnerabilidades. Spring Boot 3.4.5 ya gestiona esta versión de forma predeterminada.",
+          "code_correction_suggested": "<dependency>\n    <groupId>com.fasterxml.jackson.core</groupId>\n    <artifactId>jackson-databind</artifactId>\n</dependency> <!-- Eliminar versión explícita -->",
+          "cve_id": "CVE-2020-8840, CVE-2019-20330",
+          "impact": "Ejecución remota de código, denegación de servicio, exposición de datos sensibles.",
+          "dependency": "com.fasterxml.jackson.core:jackson-databind"
+        },
+        {
+          "type": "Versión de proyecto snapshot en producción",
+          "severity": "MEDIUM",
+          "line": "Línea 9 (versión del proyecto)",
+          "description": "La versión del proyecto (0.0.1-SNAPSHOT) indica un estado de desarrollo inestable. Las dependencias snapshot pueden cambiar sin previo aviso y no son aptas para entornos productivos.",
+          "recommendation": "Usar una versión estable sin el sufijo -SNAPSHOT para despliegues en producción.",
+          "code_correction_suggested": "<version>0.0.1</version>",
+          "cve_id": "N/A",
+          "impact": "Posibles comportamientos inconsistentes, dificultad para rastrear errores, y exposición a builds no verificados.",
+          "dependency": "N/A"
+        },
+        {
+          "type": "Metadatos de proyecto incompletos",
+          "severity": "LOW",
+          "line": "Líneas 12-25 (licencias, desarrolladores, SCM)",
+          "description": "Las secciones de licencias, desarrolladores y SCM están vacías. Esto dificulta el cumplimiento de licencias y la trazabilidad del proyecto.",
+          "recommendation": "Completar con información válida para garantizar transparencia y cumplimiento legal.",
+          "code_correction_suggested": "<licenses>\n    <license>\n        <name>Licencia válida</name>\n        <url>https://...</url>\n    </license>\n</licenses>",
+          "cve_id": "N/A",
+          "impact": "Riesgos legales, dificultad para mantener y auditar el proyecto.",
+          "dependency": "N/A"
+        }
+      ],
+      "security_score": 5,
+      "summary": "El POM presenta una vulnerabilidad CRÍTICA por jackson-databind 2.9.8 (CVE-2020-8840). Se recomienda actualizar urgentemente. La versión snapshot y metadatos incompletos son riesgos adicionales. Spring Boot 3.4.5 está actualizado, pero la dependencia explícita de Jackson lo compromete.",
+      "outdated_dependencies": [
+        {
+          "dependency": "com.fasterxml.jackson.core:jackson-databind",
+          "current_version": "2.9.8",
+          "latest_version": "2.17.0 (gestionada por Spring Boot 3.4.5)",
+          "security_risk": "HIGH"
+        }
+      ],
+      "file_type": "pom"
+    }
+  }
+}
