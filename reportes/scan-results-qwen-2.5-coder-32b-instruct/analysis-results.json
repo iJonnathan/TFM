@@ -1,0 +1,849 @@
+{
+  "timestamp": "2025-07-08 13:01:38",
+  "analysis_duration_seconds": 294.06,
+  "model_used": "qwen/qwen-2.5-coder-32b-instruct:free",
+  "overall_score": 4.800000000000001,
+  "security_score": 4.4,
+  "quality_score": 5.2,
+  "quality_gate_status": "FAILED",
+  "summary": {
+    "total_vulnerabilities": 19,
+    "high_severity_vulnerabilities": 9,
+    "medium_severity_vulnerabilities": 9,
+    "low_severity_vulnerabilities": 1,
+    "total_quality_issues": 57,
+    "files_analyzed": 5,
+    "java_files_analyzed": 4,
+    "pom_files_analyzed": 1
+  },
+  "detailed_results": {
+    "../demo/src/main/java/com/demo/DemoApplication.java": {
+      "file_type": "java",
+      "vulnerabilities": [
+        {
+          "type": "Validación de entrada insuficiente",
+          "severity": "MEDIUM",
+          "line": "No aplicable",
+          "description": "El código proporcionado es la clase principal de una aplicación Spring Boot y no contiene lógica de validación de entrada. Esto podría ser un problema si las entradas no se validan adecuadamente en otros lugares de la aplicación.",
+          "recommendation": "Asegúrate de que todas las entradas de usuario se validen y saniticen antes de su procesamiento. Utiliza anotaciones de validación de Spring como @Valid y @NotNull en los controladores.",
+          "code_correction_suggested": "No se proporciona código específico ya que no hay código de entrada en este archivo, pero en un controlador podrías tener algo como:\n@Valid @RequestBody User user",
+          "cwe_id": "CWE-20",
+          "impact": "Puede permitir ataques como inyección SQL, XSS, entre otros."
+        },
+        {
+          "type": "Problemas de autenticación/autorización",
+          "severity": "HIGH",
+          "line": "No aplicable",
+          "description": "El código no muestra ninguna configuración de seguridad relacionada con la autenticación y autorización. Esto podría significar que la aplicación no está protegida adecuadamente contra accesos no autorizados.",
+          "recommendation": "Implementa una configuración de seguridad adecuada utilizando Spring Security para manejar la autenticación y autorización.",
+          "code_correction_suggested": "Añade una clase de configuración de Spring Security, por ejemplo:\n@EnableWebSecurity\npublic class SecurityConfig extends WebSecurityConfigurerAdapter {\n    @Override\n    protected void configure(HttpSecurity http) throws Exception {\n        http.authorizeRequests().anyRequest().authenticated().and().formLogin();\n    }\n}",
+          "cwe_id": "CWE-287",
+          "impact": "Permite a los usuarios no autorizados acceder a recursos sensibles."
+        },
+        {
+          "type": "Exposición de información sensible",
+          "severity": "MEDIUM",
+          "line": "No aplicable",
+          "description": "El código no muestra ninguna gestión de información sensible, pero es importante asegurarse de que no se exponga información sensible en la aplicación.",
+          "recommendation": "No exponer información sensible en los logs, respuestas HTTP, o cualquier otro lugar accesible externamente. Utiliza herramientas de gestión de logs que ofrezcan la posibilidad de ocultar información sensible.",
+          "code_correction_suggested": "No se proporciona código específico ya que no hay código de gestión de logs en este archivo, pero en un logger podrías tener algo como:\nlogger.info(\"User {} logged in\", user.getId());",
+          "cwe_id": "CWE-312",
+          "impact": "Puede permitir a los atacantes obtener información valiosa sobre la aplicación o los usuarios."
+        },
+        {
+          "type": "Problemas de gestión de sesiones",
+          "severity": "MEDIUM",
+          "line": "No aplicable",
+          "description": "El código no muestra ninguna configuración de gestión de sesiones, lo que podría llevar a problemas de seguridad relacionados con las sesiones.",
+          "recommendation": "Configura adecuadamente la gestión de sesiones utilizando Spring Security para evitar problemas como el fijado de sesión, el robo de sesión, etc.",
+          "code_correction_suggested": "En la configuración de Spring Security, puedes configurar la gestión de sesiones, por ejemplo:\nhttp.sessionManagement().maximumSessions(1).expiredUrl(\"/login?expired\");",
+          "cwe_id": "CWE-613",
+          "impact": "Puede permitir a los atacantes robar sesiones de usuario o mantener sesiones expiradas."
+        }
+      ],
+      "security_score": "4",
+      "summary": "El código proporcionado es la clase principal de una aplicación Spring Boot y no contiene lógica específica que pueda ser vulnerable. Sin embargo, se identifican posibles problemas relacionados con la falta de configuración de seguridad, validación de entrada, autenticación, autorización, gestión de sesiones y exposición de información sensible. Se recomienda implementar una configuración de seguridad adecuada utilizando Spring Security y asegurarse de que todas las entradas de usuario se validen y saniticen antes de su procesamiento.",
+      "quality_issues": [
+        {
+          "type": "Code smells",
+          "severity": "LOW",
+          "line": "5",
+          "description": "La clase DemoApplication no tiene lógica adicional, lo que podría indicar que aún no se ha desarrollado completamente o que la lógica está en otro lugar.",
+          "recommendation": "Asegúrate de que la lógica de la aplicación esté correctamente organizada y documentada.",
+          "code_correction_suggested": "N/A",
+          "category": "Maintainability",
+          "effort": "5"
+        },
+        {
+          "type": "Complejidad ciclomática alta",
+          "severity": "LOW",
+          "line": "5",
+          "description": "La complejidad ciclomática es baja, pero es importante mantener un seguimiento de esto a medida que se agregue más lógica.",
+          "recommendation": "Monitorea la complejidad ciclomática a medida que se desarrolla la aplicación.",
+          "code_correction_suggested": "N/A",
+          "category": "Performance",
+          "effort": "0"
+        },
+        {
+          "type": "Duplicación de código",
+          "severity": "LOW",
+          "line": "5",
+          "description": "No se observa duplicación de código en este archivo.",
+          "recommendation": "Continúa revisando otros archivos para detectar duplicación de código.",
+          "code_correction_suggested": "N/A",
+          "category": "Maintainability",
+          "effort": "0"
+        },
+        {
+          "type": "Problemas de mantenibilidad",
+          "severity": "LOW",
+          "line": "5",
+          "description": "La clase es simple y fácil de mantener, pero es importante asegurarse de que la lógica adicional se organice correctamente.",
+          "recommendation": "Organiza la lógica adicional en paquetes y clases separadas para mejorar la mantenibilidad.",
+          "code_correction_suggested": "N/A",
+          "category": "Maintainability",
+          "effort": "10"
+        },
+        {
+          "type": "Violaciones de principios SOLID",
+          "severity": "LOW",
+          "line": "5",
+          "description": "No se observan violaciones de principios SOLID en este archivo.",
+          "recommendation": "Continúa revisando otros archivos para detectar posibles violaciones de SOLID.",
+          "code_correction_suggested": "N/A",
+          "category": "Maintainability",
+          "effort": "0"
+        },
+        {
+          "type": "Uso inadecuado de patrones de diseño",
+          "severity": "LOW",
+          "line": "5",
+          "description": "No se observa el uso de patrones de diseño en este archivo.",
+          "recommendation": "Continúa revisando otros archivos para detectar el uso adecuado de patrones de diseño.",
+          "code_correction_suggested": "N/A",
+          "category": "Maintainability",
+          "effort": "0"
+        },
+        {
+          "type": "Gestión de excepciones",
+          "severity": "LOW",
+          "line": "5",
+          "description": "No se observa gestión de excepciones en este archivo.",
+          "recommendation": "Continúa revisando otros archivos para detectar la gestión adecuada de excepciones.",
+          "code_correction_suggested": "N/A",
+          "category": "Reliability",
+          "effort": "0"
+        },
+        {
+          "type": "Nomenclatura y convenciones",
+          "severity": "LOW",
+          "line": "5",
+          "description": "La nomenclatura y las convenciones siguen las recomendaciones de Java.",
+          "recommendation": "Continúa revisando otros archivos para asegurar que se sigan las convenciones de nomenclatura.",
+          "code_correction_suggested": "N/A",
+          "category": "Documentation",
+          "effort": "0"
+        },
+        {
+          "type": "Eficiencia y rendimiento",
+          "severity": "LOW",
+          "line": "5",
+          "description": "No se observan problemas de eficiencia o rendimiento en este archivo.",
+          "recommendation": "Continúa revisando otros archivos para detectar posibles problemas de rendimiento.",
+          "code_correction_suggested": "N/A",
+          "category": "Performance",
+          "effort": "0"
+        },
+        {
+          "type": "Cobertura y calidad de comentarios",
+          "severity": "LOW",
+          "line": "5",
+          "description": "No se observan comentarios en este archivo.",
+          "recommendación": "Añade comentarios para documentar la lógica de la aplicación.",
+          "code_correction_suggested": "Añadir comentarios descriptivos en el método main y en otros métodos a medida que se desarrollen.",
+          "category": "Documentation",
+          "effort": "5"
+        }
+      ],
+      "quality_score": "8.5",
+      "maintainability_index": "80",
+      "complexity_score": "1",
+      "technical_debt": "20"
+    },
+    "../demo/src/main/java/com/demo/controllers/WelcomeController.java": {
+      "file_type": "java",
+      "vulnerabilities": [
+        {
+          "type": "Inyección SQL",
+          "severity": "HIGH",
+          "line": "45",
+          "description": "La consulta SQL se construye concatenando directamente el parámetro 'username' sin sanitizar, lo que permite a un atacante inyectar código SQL malicioso.",
+          "recommendation": "Utilizar sentencias preparadas (PreparedStatement) para evitar la inyección SQL.",
+          "code_correction_suggested": "PreparedStatement pstmt = conn.prepareStatement(\"SELECT * FROM users WHERE username = ?\"); pstmt.setString(1, username); ResultSet rs = pstmt.executeQuery();",
+          "cwe_id": "CWE-89",
+          "impact": "Acceso no autorizado a la base de datos, manipulación de datos, robo de información."
+        },
+        {
+          "type": "Cross-Site Scripting (XSS)",
+          "severity": "MEDIUM",
+          "line": "31",
+          "description": "El parámetro 'name' se inserta directamente en la respuesta sin escapar, lo que permite a un atacante inyectar scripts maliciosos.",
+          "recommendation": "Escapar el parámetro 'name' antes de incluirlo en la respuesta.",
+          "code_correction_suggested": "return new WelcomeDTO(\"Hola, bienvenido \" + org.owasp.encoder.Encode.forHtml(name) + \", esto es un demo\");",
+          "cwe_id": "CWE-79",
+          "impact": "Robo de cookies, sesiones hijack, redirecciones maliciosas."
+        },
+        {
+          "type": "Command Injection",
+          "severity": "HIGH",
+          "line": "57",
+          "description": "El parámetro 'host' se concatena directamente en el comando 'ping', lo que permite a un atacante inyectar comandos adicionales.",
+          "recommendation": "Validar y sanitizar el parámetro 'host' o utilizar una lista blanca de hosts permitidos.",
+          "code_correction_suggested": "if (!host.matches(\"^[a-zA-Z0-9.-]+$\")) throw new IllegalArgumentException(\"Host inválido\");",
+          "cwe_id": "CWE-78",
+          "impact": "Ejecución de comandos maliciosos en el servidor."
+        },
+        {
+          "type": "Path Traversal",
+          "severity": "HIGH",
+          "line": "41",
+          "description": "El parámetro 'filePath' se utiliza directamente para leer archivos, lo que permite a un atacante acceder a archivos fuera del directorio esperado.",
+          "recommendation": "Validar y sanitizar el parámetro 'filePath' o utilizar una lista blanca de rutas permitidas.",
+          "code_correction_suggested": "if (!filePath.startsWith(\"/safe/directory/\")) throw new IllegalArgumentException(\"Ruta inválida\");",
+          "cwe_id": "CWE-22",
+          "impact": "Acceso a archivos sensibles del servidor."
+        },
+        {
+          "type": "Deserialización insegura",
+          "severity": "HIGH",
+          "line": "65",
+          "description": "La deserialización de objetos no controlada puede permitir la ejecución de código malicioso.",
+          "recommendation": "Evitar la deserialización de datos no confiables o utilizar un mecanismo de deserialización seguro.",
+          "code_correction_suggested": "No deserializar datos no confiables. Considerar el uso de JSON o XML en su lugar.",
+          "cwe_id": "CWE-502",
+          "impact": "Ejecución de código malicioso, compromiso del sistema."
+        },
+        {
+          "type": "Uso inseguro de criptografía",
+          "severity": "HIGH",
+          "line": "83",
+          "description": "El uso de MD5 para hashing es considerado inseguro debido a sus vulnerabilidades a colisiones.",
+          "recommendation": "Utilizar un algoritmo de hashing más seguro como SHA-256.",
+          "code_correction_suggested": "MessageDigest md = MessageDigest.getInstance(\"SHA-256\");",
+          "cwe_id": "CWE-327",
+          "impact": "Colisiones de hash, robo de información."
+        },
+        {
+          "type": "Uso inseguro de criptografía",
+          "severity": "HIGH",
+          "line": "93",
+          "description": "El cifrado simétrico con una clave estática y sin IV (Vector de Inicialización) es inseguro.",
+          "recommendation": "Utilizar una clave dinámica y un IV único para cada cifrado.",
+          "code_correction_suggested": "Cipher cipher = Cipher.getInstance(\"AES/GCM/NoPadding\"); SecretKeySpec secretKey = new SecretKeySpec(key.getBytes(), \"AES\"); IvParameterSpec iv = new IvParameterSpec(generateRandomIV()); cipher.init(Cipher.ENCRYPT_MODE, secretKey, iv);",
+          "cwe_id": "CWE-329",
+          "impact": "Descifrado de datos, robo de información."
+        },
+        {
+          "type": "Exposición de información sensible",
+          "severity": "HIGH",
+          "line": "21",
+          "description": "La contraseña de la base de datos y la API key están codificadas en el código fuente, lo que las expone a ser vistas por cualquier persona con acceso al código.",
+          "recommendation": "Almacenar credenciales sensibles en variables de entorno o un gestor de secretos.",
+          "code_correction_suggested": "String dbPassword = System.getenv(\"DB_PASSWORD\"); String apiKey = System.getenv(\"API_KEY\");",
+          "cwe_id": "CWE-798",
+          "impact": "Acceso no autorizado a la base de datos, uso no autorizado de la API."
+        },
+        {
+          "type": "Exposición de información sensible",
+          "severity": "MEDIUM",
+          "line": "73",
+          "description": "Los detalles de la excepción se devuelven en la respuesta, lo que puede revelar información interna del sistema.",
+          "recommendation": "No devolver detalles internos de excepciones en las respuestas. Utilizar un manejo de errores genérico.",
+          "code_correction_suggested": "catch (Exception e) { logger.error(\"Error procesando la solicitud\", e); return \"Ocurrió un error al procesar la solicitud\"; }",
+          "cwe_id": "CWE-209",
+          "impact": "Revelación de información interna, posibles ataques basados en la información revelada."
+        },
+        {
+          "type": "Problemas de autenticación/autorización",
+          "severity": "MEDIUM",
+          "line": "70",
+          "description": "Los detalles del intento de login se registran en los logs, lo que puede revelar información sensible sobre los intentos de acceso.",
+          "recommendation": "No registrar contraseñas en los logs. Utilizar un sistema de autenticación seguro y gestionar los intentos de login de manera segura.",
+          "code_correction_suggested": "logger.info(\"Intento de login con usuario: \" + user);",
+          "cwe_id": "CWE-532",
+          "impact": "Revelación de información sensible, posibles ataques basados en la información revelada."
+        },
+        {
+          "type": "Validación de entrada insuficiente",
+          "severity": "MEDIUM",
+          "line": "31",
+          "description": "El parámetro 'name' no se valida ni se sanitiza antes de ser utilizado en la respuesta.",
+          "recommendation": "Validar y sanitizar todos los parámetros de entrada.",
+          "code_correction_suggested": "if (name == null || name.isEmpty() || name.length() > 100) throw new IllegalArgumentException(\"Nombre inválido\");",
+          "cwe_id": "CWE-20",
+          "impact": "Inyección de scripts, manipulación de datos."
+        }
+      ],
+      "security_score": "2",
+      "summary": "El código presenta múltiples vulnerabilidades de seguridad, incluyendo inyección SQL, XSS, inyección de comandos, deserialización insegura, uso inseguro de criptografía, exposición de información sensible y problemas de autenticación/autorización. Se recomienda realizar cambios significativos para mejorar la seguridad del sistema.",
+      "quality_issues": [
+        {
+          "type": "Code smells y anti-patrones",
+          "severity": "HIGH",
+          "line": "10",
+          "description": "Logger mal usado con datos sensibles",
+          "recommendation": "No loguear información sensible como contraseñas o datos de usuario",
+          "code_correction_suggested": "logger.info(\"Intento de login con usuario: \" + user);",
+          "category": "Reliability",
+          "effort": "5"
+        },
+        {
+          "type": "Code smells y anti-patrones",
+          "severity": "HIGH",
+          "line": "13",
+          "description": "Hardcoded secret (clave embebida)",
+          "recommendation": "Utilizar variables de entorno o un gestor de secretos para almacenar contraseñas y claves",
+          "code_correction_suggested": "private static final String DB_PASSWORD = System.getenv(\"DB_PASSWORD\");",
+          "category": "Security",
+          "effort": "10"
+        },
+        {
+          "type": "Code smells y anti-patrones",
+          "severity": "HIGH",
+          "line": "14",
+          "description": "Hardcoded secret (clave embebida)",
+          "recommendation": "Utilizar variables de entorno o un gestor de secretos para almacenar contraseñas y claves",
+          "code_correction_suggested": "private static final String API_KEY = System.getenv(\"API_KEY\");",
+          "category": "Security",
+          "effort": "10"
+        },
+        {
+          "type": "Code smells y anti-patrones",
+          "severity": "HIGH",
+          "line": "20",
+          "description": "XSS (Cross-Site Scripting)",
+          "recommendation": "Sanitizar la entrada del usuario antes de incluirla en la respuesta",
+          "code_correction_suggested": "return new WelcomeDTO(\"Hola, bienvenido \" + HtmlUtils.htmlEscape(name) + \", esto es un demo\");",
+          "category": "Security",
+          "effort": "15"
+        },
+        {
+          "type": "Code smells y anti-patrones",
+          "severity": "HIGH",
+          "line": "25",
+          "description": "RCE (Remote Code Execution)",
+          "recommendation": "No permitir la ejecución de código proporcionado por el usuario",
+          "code_correction_suggested": "throw new UnsupportedOperationException(\"No se permite la ejecución de código proporcionado por el usuario\");",
+          "category": "Security",
+          "effort": "5"
+        },
+        {
+          "type": "Code smells y anti-patrones",
+          "severity": "HIGH",
+          "line": "30",
+          "description": "Path Traversal",
+          "recommendation": "Validar y sanitizar la ruta del archivo proporcionada por el usuario",
+          "code_correction_suggested": "Path path = Paths.get(filePath).toAbsolutePath().normalize();\nif (!path.startsWith(Paths.get(\"/ruta/segura\"))) {\n    throw new IllegalArgumentException(\"Ruta no permitida\");\n}\nreturn Files.readString(path);",
+          "category": "Security",
+          "effort": "20"
+        },
+        {
+          "type": "Code smells y anti-patrones",
+          "severity": "HIGH",
+          "line": "36",
+          "description": "SQL Injection",
+          "recommendacion": "Utilizar sentencias preparadas para evitar inyecciones SQL",
+          "code_correction_suggested": "String sql = \"SELECT * FROM users WHERE username = ?\";\ntry (PreparedStatement pstmt = conn.prepareStatement(sql)) {\n    pstmt.setString(1, username);\n    ResultSet rs = pstmt.executeQuery();\n    if (rs.next()) {\n        return \"Usuario: \" + rs.getString(\"username\") + \", Email: \" + rs.getString(\"email\");\n    }\n}",
+          "category": "Security",
+          "effort": "25"
+        },
+        {
+          "type": "Code smells y anti-patrones",
+          "severity": "HIGH",
+          "line": "48",
+          "description": "Command Injection",
+          "recommendacion": "Evitar la ejecución de comandos proporcionados por el usuario o utilizar una lista blanca de comandos permitidos",
+          "code_correction_suggested": "throw new UnsupportedOperationException(\"No se permite la ejecución de comandos proporcionados por el usuario\");",
+          "category": "Security",
+          "effort": "5"
+        },
+        {
+          "type": "Code smells y anti-patrones",
+          "severity": "HIGH",
+          "line": "54",
+          "description": "Deserialización insegura",
+          "recommendacion": "Evitar la deserialización de datos proporcionados por el usuario o utilizar un mecanismo de seguridad como un filtro de clases",
+          "code_correction_suggested": "throw new UnsupportedOperationException(\"No se permite la deserialización de datos proporcionados por el usuario\");",
+          "category": "Security",
+          "effort": "5"
+        },
+        {
+          "type": "Code smells y anti-patrones",
+          "severity": "HIGH",
+          "line": "60",
+          "description": "Logs sensibles",
+          "recommendacion": "No loguear información sensible como contraseñas o datos de usuario",
+          "code_correction_suggested": "logger.info(\"Intento de login con usuario: \" + user);",
+          "category": "Reliability",
+          "effort": "5"
+        },
+        {
+          "type": "Code smells y anti-patrones",
+          "severity": "HIGH",
+          "line": "66",
+          "description": "Cifrado débil (uso de MD5)",
+          "recommendacion": "Utilizar un algoritmo de hash más seguro como SHA-256",
+          "code_correction_suggested": "MessageDigest md = MessageDigest.getInstance(\"SHA-256\");",
+          "category": "Security",
+          "effort": "10"
+        },
+        {
+          "type": "Code smells y anti-patrones",
+          "severity": "HIGH",
+          "line": "73",
+          "description": "Cifrado simétrico débil (AES con clave fija)",
+          "recommendacion": "Utilizar una clave dinámica y un modo seguro de cifrado como AES/GCM",
+          "code_correction_suggested": "String key = System.getenv(\"AES_KEY\");\nSecretKeySpec secretKey = new SecretKeySpec(key.getBytes(), \"AES\");\nCipher cipher = Cipher.getInstance(\"AES/GCM/NoPadding\");",
+          "category": "Security",
+          "effort": "20"
+        },
+        {
+          "type": "Code smells y anti-patrones",
+          "severity": "HIGH",
+          "line": "82",
+          "description": "Stacktrace expuesto",
+          "recommendacion": "No devolver detalles internos de errores al cliente",
+          "code_correction_suggested": "logger.severe(\"Error: \" + e.getMessage());\nreturn \"Ha ocurrido un error interno\";",
+          "category": "Reliability",
+          "effort": "10"
+        },
+        {
+          "type": "Problemas de mantenibilidad",
+          "severity": "MEDIUM",
+          "line": "10",
+          "description": "Logger mal usado con datos sensibles",
+          "recommendacion": "No loguear información sensible como contraseñas o datos de usuario",
+          "code_correction_suggested": "logger.info(\"Intento de login con usuario: \" + user);",
+          "category": "Maintainability",
+          "effort": "5"
+        },
+        {
+          "type": "Problemas de mantenibilidad",
+          "severity": "MEDIUM",
+          "line": "13",
+          "description": "Hardcoded secret (clave embebida)",
+          "recommendacion": "Utilizar variables de entorno o un gestor de secretos para almacenar contraseñas y claves",
+          "code_correction_suggested": "private static final String DB_PASSWORD = System.getenv(\"DB_PASSWORD\");",
+          "category": "Maintainability",
+          "effort": "10"
+        },
+        {
+          "type": "Problemas de mantenibilidad",
+          "severity": "MEDIUM",
+          "line": "14",
+          "description": "Hardcoded secret (clave embebida)",
+          "recommendacion": "Utilizar variables de entorno o un gestor de secretos para almacenar contraseñas y claves",
+          "code_correction_suggested": "private static final String API_KEY = System.getenv(\"API_KEY\");",
+          "category": "Maintainability",
+          "effort": "10"
+        },
+        {
+          "type": "Problemas de mantenibilidad",
+          "severity": "LOW",
+          "line": "82",
+          "description": "Stacktrace expuesto",
+          "recommendacion": "No devolver detalles internos de errores al cliente",
+          "code_correction_suggested": "logger.severe(\"Error: \" + e.getMessage());\nreturn \"Ha ocurrido un error interno\";",
+          "category": "Maintainability",
+          "effort": "10"
+        },
+        {
+          "type": "Violaciones de principios SOLID",
+          "severity": "HIGH",
+          "line": "25",
+          "description": "RCE (Remote Code Execution)",
+          "recommendacion": "No permitir la ejecución de código proporcionado por el usuario",
+          "code_correction_suggested": "throw new UnsupportedOperationException(\"No se permite la ejecución de código proporcionado por el usuario\");",
+          "category": "Design",
+          "effort": "5"
+        },
+        {
+          "type": "Violaciones de principios SOLID",
+          "severity": "HIGH",
+          "line": "30",
+          "description": "Path Traversal",
+          "recommendacion": "Validar y sanitizar la ruta del archivo proporcionada por el usuario",
+          "code_correction_suggested": "Path path = Paths.get(filePath).toAbsolutePath().normalize();\nif (!path.startsWith(Paths.get(\"/ruta/segura\"))) {\n    throw new IllegalArgumentException(\"Ruta no permitida\");\n}\nreturn Files.readString(path);",
+          "category": "Design",
+          "effort": "20"
+        },
+        {
+          "type": "Violaciones de principios SOLID",
+          "severity": "HIGH",
+          "line": "36",
+          "description": "SQL Injection",
+          "recommendacion": "Utilizar sentencias preparadas para evitar inyecciones SQL",
+          "code_correction_suggested": "String sql = \"SELECT * FROM users WHERE username = ?\";\ntry (PreparedStatement pstmt = conn.prepareStatement(sql)) {\n    pstmt.setString(1, username);\n    ResultSet rs = pstmt.executeQuery();\n    if (rs.next()) {\n        return \"Usuario: \" + rs.getString(\"username\") + \", Email: \" + rs.getString(\"email\");\n    }\n}",
+          "category": "Design",
+          "effort": "25"
+        },
+        {
+          "type": "Violaciones de principios SOLID",
+          "severity": "HIGH",
+          "line": "48",
+          "description": "Command Injection",
+          "recommendacion": "Evitar la ejecución de comandos proporcionados por el usuario o utilizar una lista blanca de comandos permitidos",
+          "code_correction_suggested": "throw new UnsupportedOperationException(\"No se permite la ejecución de comandos proporcionados por el usuario\");",
+          "category": "Design",
+          "effort": "5"
+        },
+        {
+          "type": "Violaciones de principios SOLID",
+          "severity": "HIGH",
+          "line": "54",
+          "description": "Deserialización insegura",
+          "recommendacion": "Evitar la deserialización de datos proporcionados por el usuario o utilizar un mecanismo de seguridad como un filtro de clases",
+          "code_correction_suggested": "throw new UnsupportedOperationException(\"No se permite la deserialización de datos proporcionados por el usuario\");",
+          "category": "Design",
+          "effort": "5"
+        },
+        {
+          "type": "Gestión de excepciones",
+          "severity": "HIGH",
+          "line": "82",
+          "description": "Stacktrace expuesto",
+          "recommendacion": "No devolver detalles internos de errores al cliente",
+          "code_correction_suggested": "logger.severe(\"Error: \" + e.getMessage());\nreturn \"Ha ocurrido un error interno\";",
+          "category": "Reliability",
+          "effort": "10"
+        },
+        {
+          "type": "Nomenclatura y convenciones",
+          "severity": "LOW",
+          "line": "10",
+          "description": "Logger mal usado con datos sensibles",
+          "recommendacion": "No loguear información sensible como contraseñas o datos de usuario",
+          "code_correction_suggested": "logger.info(\"Intento de login con usuario: \" + user);",
+          "category": "Documentation",
+          "effort": "5"
+        },
+        {
+          "type": "Nomenclatura y convenciones",
+          "severity": "LOW",
+          "line": "13",
+          "description": "Hardcoded secret (clave embebida)",
+          "recommendacion": "Utilizar variables de entorno o un gestor de secretos para almacenar contraseñas y claves",
+          "code_correction_suggested": "private static final String DB_PASSWORD = System.getenv(\"DB_PASSWORD\");",
+          "category": "Documentation",
+          "effort": "10"
+        },
+        {
+          "type": "Nomenclatura y convenciones",
+          "severity": "LOW",
+          "line": "14",
+          "description": "Hardcoded secret (clave embebida)",
+          "recommendacion": "Utilizar variables de entorno o un gestor de secretos para almacenar contraseñas y claves",
+          "code_correction_suggested": "private static final String API_KEY = System.getenv(\"API_KEY\");",
+          "category": "Documentation",
+          "effort": "10"
+        },
+        {
+          "type": "Nomenclatura y convenciones",
+          "severity": "LOW",
+          "line": "82",
+          "description": "Stacktrace expuesto",
+          "recommendacion": "No devolver detalles internos de errores al cliente",
+          "code_correction_suggested": "logger.severe(\"Error: \" + e.getMessage());\nreturn \"Ha ocurrido un error interno\";",
+          "category": "Documentation",
+          "effort": "10"
+        },
+        {
+          "type": "Eficiencia y rendimiento",
+          "severity": "LOW",
+          "line": "30",
+          "description": "Path Traversal",
+          "recommendacion": "Validar y sanitizar la ruta del archivo proporcionada por el usuario",
+          "code_correction_suggested": "Path path = Paths.get(filePath).toAbsolutePath().normalize();\nif (!path.startsWith(Paths.get(\"/ruta/segura\"))) {\n    throw new IllegalArgumentException(\"Ruta no permitida\");\n}\nreturn Files.readString(path);",
+          "category": "Performance",
+          "effort": "20"
+        },
+        {
+          "type": "Cobertura y calidad de comentarios",
+          "severity": "LOW",
+          "line": "10",
+          "description": "Logger mal usado con datos sensibles",
+          "recommendacion": "No loguear información sensible como contraseñas o datos de usuario",
+          "code_correction_suggested": "logger.info(\"Intento de login con usuario: \" + user);",
+          "category": "Documentation",
+          "effort": "5"
+        },
+        {
+          "type": "Cobertura y calidad de comentarios",
+          "severity": "LOW",
+          "line": "13",
+          "description": "Hardcoded secret (clave embebida)",
+          "recommendacion": "Utilizar variables de entorno o un gestor de secretos para almacenar contraseñas y claves",
+          "code_correction_suggested": "private static final String DB_PASSWORD = System.getenv(\"DB_PASSWORD\");",
+          "category": "Documentation",
+          "effort": "10"
+        },
+        {
+          "type": "Cobertura y calidad de comentarios",
+          "severity": "LOW",
+          "line": "14",
+          "description": "Hardcoded secret (clave embebida)",
+          "recommendacion": "Utilizar variables de entorno o un gestor de secretos para almacenar contraseñas y claves",
+          "code_correction_suggested": "private static final String API_KEY = System.getenv(\"API_KEY\");",
+          "category": "Documentation",
+          "effort": "10"
+        },
+        {
+          "type": "Cobertura y calidad de comentarios",
+          "severity": "LOW",
+          "line": "82",
+          "description": "Stacktrace expuesto",
+          "recommendacion": "No devolver detalles internos de errores al cliente",
+          "code_correction_suggested": "logger.severe(\"Error: \" + e.getMessage());\nreturn \"Ha ocurrido un error interno\";",
+          "category": "Documentation",
+          "effort": "10"
+        }
+      ],
+      "quality_score": "2",
+      "maintainability_index": "20",
+      "complexity_score": "8",
+      "technical_debt": "300"
+    },
+    "../demo/src/main/java/com/demo/models/WelcomeDTO.java": {
+      "file_type": "java",
+      "vulnerabilities": [
+        {
+          "type": "Validación de entrada insuficiente",
+          "severity": "MEDIUM",
+          "line": "5",
+          "description": "El constructor y el setter de la clase WelcomeDTO no realizan ninguna validación de entrada en el campo 'message'. Esto podría permitir que se ingresen datos maliciosos, como código malicioso o SQL inyectado, dependiendo de cómo se utilice este DTO en el resto de la aplicación.",
+          "recommendation": "Validar y sanitizar la entrada del campo 'message' para evitar inyecciones SQL, XSS y otros ataques basados en la entrada del usuario.",
+          "code_correction_suggested": "public WelcomeDTO(String message) {\n    if (message == null || message.isEmpty()) {\n        throw new IllegalArgumentException(\"Message cannot be null or empty\");\n    }\n    // Aquí se pueden agregar más validaciones según sea necesario\n    this.message = message;\n}",
+          "cwe_id": "CWE-20",
+          "impact": "Permite ataques de inyección SQL, XSS y otros ataques basados en la entrada del usuario."
+        },
+        {
+          "type": "Exposición de información sensible",
+          "severity": "LOW",
+          "line": "5",
+          "description": "Aunque no es evidente en este fragmento de código, si el campo 'message' contiene información sensible y se expone a través de una API o interfaz de usuario, podría llevar a una exposición de información sensible.",
+          "recommendation": "Asegúrate de que la información sensible no se expone a través de la API o interfaz de usuario. Considera el uso de mecanismos de encriptación para datos sensibles.",
+          "code_correction_suggested": "No se aplica directamente en este fragmento, pero se recomienda revisar el uso del DTO en el resto de la aplicación para asegurar que no se expone información sensible.",
+          "cwe_id": "CWE-319",
+          "impact": "Posible exposición de información sensible si el campo 'message' contiene datos sensibles."
+        }
+      ],
+      "security_score": "6",
+      "summary": "El código proporcionado tiene principalmente problemas de validación de entrada insuficiente y potencialmente una exposición de información sensible si el campo 'message' contiene datos sensibles. No se identificaron vulnerabilidades específicas como inyección SQL, XSS, problemas de autenticación/autorización, vulnerabilidades de deserialización, uso inseguro de criptografía, path traversal, command injection o problemas de gestión de sesiones en este fragmento de código.",
+      "quality_issues": [
+        {
+          "type": "Code smells",
+          "severity": "LOW",
+          "line": "3",
+          "description": "La clase WelcomeDTO es una clase de transferencia de datos simple sin lógica adicional. No hay problemas de calidad en sí misma, pero podría considerarse innecesaria si solo se usa para almacenar un mensaje.",
+          "recommendation": "Considera si esta clase es realmente necesaria. Si solo se usa para almacenar un mensaje, podrías considerar usar un tipo de dato primitivo o un String directamente.",
+          "code_correction_suggested": "No es estrictamente necesario, pero si decides eliminar la clase, podrías reemplazarla con un String en el código que la usa.",
+          "category": "Maintainability",
+          "effort": "5"
+        },
+        {
+          "type": "Complejidad ciclomática alta",
+          "severity": "LOW",
+          "line": "N/A",
+          "description": "La complejidad ciclomática es baja ya que la clase no contiene lógica condicional o bucles.",
+          "recommendation": "No es necesario realizar cambios.",
+          "code_correction_suggested": "N/A",
+          "category": "Performance",
+          "effort": "0"
+        },
+        {
+          "type": "Duplicación de código",
+          "severity": "LOW",
+          "line": "N/A",
+          "description": "No hay duplicación de código en esta clase.",
+          "recommendation": "No es necesario realizar cambios.",
+          "code_correction_suggested": "N/A",
+          "category": "Maintainability",
+          "effort": "0"
+        },
+        {
+          "type": "Problemas de mantenibilidad",
+          "severity": "LOW",
+          "line": "N/A",
+          "description": "La clase es simple y fácil de mantener.",
+          "recommendation": "No es necesario realizar cambios.",
+          "code_correction_suggested": "N/A",
+          "category": "Maintainability",
+          "effort": "0"
+        },
+        {
+          "type": "Violaciones de principios SOLID",
+          "severity": "LOW",
+          "line": "N/A",
+          "description": "La clase no viola los principios SOLID ya que es una clase de transferencia de datos simple.",
+          "recommendation": "No es necesario realizar cambios.",
+          "code_correction_suggested": "N/A",
+          "category": "Maintainability",
+          "effort": "0"
+        },
+        {
+          "type": "Uso inadecuado de patrones de diseño",
+          "severity": "LOW",
+          "line": "N/A",
+          "description": "No se está utilizando ningún patrón de diseño en esta clase.",
+          "recommendation": "No es necesario realizar cambios.",
+          "code_correction_suggested": "N/A",
+          "category": "Maintainability",
+          "effort": "0"
+        },
+        {
+          "type": "Gestión de excepciones",
+          "severity": "LOW",
+          "line": "N/A",
+          "description": "No hay gestión de excepciones en esta clase ya que no contiene lógica que pueda lanzar excepciones.",
+          "recommendation": "No es necesario realizar cambios.",
+          "code_correction_suggested": "N/A",
+          "category": "Reliability",
+          "effort": "0"
+        },
+        {
+          "type": "Nomenclatura y convenciones",
+          "severity": "LOW",
+          "line": "N/A",
+          "description": "La nomenclatura y las convenciones de codificación son correctas.",
+          "recommendation": "No es necesario realizar cambios.",
+          "code_correction_suggested": "N/A",
+          "category": "Documentation",
+          "effort": "0"
+        },
+        {
+          "type": "Eficiencia y rendimiento",
+          "severity": "LOW",
+          "line": "N/A",
+          "description": "La clase es simple y no tiene problemas de eficiencia o rendimiento.",
+          "recommendation": "No es necesario realizar cambios.",
+          "code_correction_suggested": "N/A",
+          "category": "Performance",
+          "effort": "0"
+        },
+        {
+          "type": "Cobertura y calidad de comentarios",
+          "severity": "MEDIUM",
+          "line": "N/A",
+          "description": "La clase no tiene comentarios y no está documentada.",
+          "recommendacion": "Añade comentarios y documentación a la clase y a sus métodos para mejorar la comprensión del código.",
+          "code_correction_suggested": "/**\n * Clase de transferencia de datos para un mensaje de bienvenida.\n */\npublic class WelcomeDTO {\n    /**\n     * Mensaje de bienvenida.\n     */\n    private String message;\n\n    /**\n     * Constructor de la clase WelcomeDTO.\n     * @param message Mensaje de bienvenida.\n     */\n    public WelcomeDTO(String message) {\n        this.message = message;\n    }\n\n    /**\n     * Obtiene el mensaje de bienvenida.\n     * @return Mensaje de bienvenida.\n     */\n    public String getMessage() {\n        return message;\n    }\n\n    /**\n     * Establece el mensaje de bienvenida.\n     * @param message Mensaje de bienvenida.\n     */\n    public void setMessage(String message) {\n        this.message = message;\n    }\n}",
+          "category": "Documentation",
+          "effort": "10"
+        }
+      ],
+      "quality_score": "8",
+      "maintainability_index": "85",
+      "complexity_score": "1",
+      "technical_debt": "15"
+    },
+    "../demo/src/test/java/com/demo/controller/WelcomeControllerTests.java": {
+      "file_type": "java",
+      "vulnerabilities": [
+        {
+          "type": "Validación de entrada insuficiente",
+          "severity": "MEDIUM",
+          "line": "25",
+          "description": "La prueba unitaria no verifica si el parámetro 'name' es seguro y no contiene caracteres maliciosos. Esto podría llevar a problemas si el parámetro 'name' se utiliza en consultas SQL, en la generación de HTML, o en otros contextos sensibles.",
+          "recommendation": "Validar y sanitizar todos los parámetros de entrada antes de usarlos en cualquier operación que pueda ser sensible a la inyección de código o XSS.",
+          "code_correction_suggested": "Asegúrate de que el parámetro 'name' se valide en el controlador antes de usarlo. Por ejemplo, puedes usar expresiones regulares para permitir solo caracteres alfanuméricos o utilizar librerías de sanitización de entrada.",
+          "cwe_id": "CWE-20",
+          "impact": "Puede permitir inyecciones SQL, XSS u otros ataques si el parámetro 'name' se utiliza en contextos sensibles."
+        }
+      ],
+      "security_score": "7",
+      "summary": "El código de prueba no contiene vulnerabilidades críticas, pero hay una recomendación importante sobre la validación de entrada. Se recomienda validar y sanitizar todos los parámetros de entrada en el controlador para evitar posibles ataques de inyección de código o XSS.",
+      "quality_issues": [
+        {
+          "type": "Code Smell",
+          "severity": "LOW",
+          "line": "1",
+          "description": "El paquete está mal escrito. Debería ser 'com.demo.controllers' en lugar de 'com.demo.controller'.",
+          "recommendation": "Corregir el nombre del paquete para que coincida con la convención de nomenclatura y la estructura del proyecto.",
+          "code_correction_suggested": "package com.demo.controllers;",
+          "category": "Documentation",
+          "effort": "5"
+        },
+        {
+          "type": "Code Smell",
+          "severity": "LOW",
+          "line": "14",
+          "description": "La prueba 'welcomeEndpointReturnsDefaultMessage' y 'welcomeEndpointReturnsCustomMessage' tienen una estructura similar y podrían beneficiarse de una refactorización para evitar duplicación de código.",
+          "recommendation": "Extraer la lógica común en un método auxiliar y llamarlo desde ambas pruebas.",
+          "code_correction_suggested": "private void assertWelcomeEndpoint(String name, String expectedMessage) throws Exception {\n    mockMvc.perform(get(\"/api/welcome\").param(\"name\", name))\n           .andExpect(status().isOk())\n           .andExpect(content().contentType(\"application/json\"))\n           .andExpect(jsonPath(\"$.message\").value(expectedMessage));\n}\n\n@Test\npublic void welcomeEndpointReturnsDefaultMessage() throws Exception {\n    assertWelcomeEndpoint(null, \"Hola, bienvenido ..., esto es un demo\");\n}\n\n@Test\npublic void welcomeEndpointReturnsCustomMessage() throws Exception {\n    assertWelcomeEndpoint(\"Juan\", \"Hola, bienvenido Juan, esto es un demo\");\n}",
+          "category": "Maintainability",
+          "effort": "15"
+        },
+        {
+          "type": "Code Smell",
+          "severity": "LOW",
+          "line": "14",
+          "description": "Las pruebas podrían beneficiarse de una mejor nomenclatura para que sean más descriptivas y claras.",
+          "recommendation": "Cambiar el nombre de las pruebas para que reflejen mejor el comportamiento que están probando.",
+          "code_correction_suggested": "public void testWelcomeEndpointReturnsDefaultMessage() throws Exception {}\npublic void testWelcomeEndpointReturnsCustomMessage() throws Exception {}",
+          "category": "Documentation",
+          "effort": "5"
+        },
+        {
+          "type": "Code Smell",
+          "severity": "LOW",
+          "line": "14",
+          "description": "Las pruebas podrían beneficiarse de comentarios para explicar qué se está probando y por qué.",
+          "recommendation": "Añadir comentarios a las pruebas para mejorar la comprensión del código.",
+          "code_correction_suggested": "// Verifica que el endpoint /api/welcome devuelve el mensaje por defecto cuando no se proporciona un nombre.\n@Test\npublic void welcomeEndpointReturnsDefaultMessage() throws Exception {}\n\n// Verifica que el endpoint /api/welcome devuelve un mensaje personalizado cuando se proporciona un nombre.\n@Test\npublic void welcomeEndpointReturnsCustomMessage() throws Exception {}",
+          "category": "Documentation",
+          "effort": "10"
+        },
+        {
+          "type": "Code Smell",
+          "severity": "LOW",
+          "line": "14",
+          "description": "Las pruebas podrían beneficiarse de una mejor organización para mejorar la legibilidad y mantenibilidad.",
+          "recommendation": "Organizar las pruebas en secciones o métodos auxiliares para mejorar la estructura del código.",
+          "code_correction_suggested": "private void assertWelcomeEndpoint(String name, String expectedMessage) throws Exception {}\n\n@Test\npublic void testWelcomeEndpoint() throws Exception {\n    assertWelcomeEndpoint(null, \"Hola, bienvenido ..., esto es un demo\");\n    assertWelcomeEndpoint(\"Juan\", \"Hola, bienvenido Juan, esto es un demo\");\n}",
+          "category": "Maintainability",
+          "effort": "15"
+        }
+      ],
+      "quality_score": "7.5",
+      "maintainability_index": "65",
+      "complexity_score": "2",
+      "technical_debt": "40"
+    },
+    "../demo/pom.xml": {
+      "vulnerabilities": [
+        {
+          "type": "Dependencia con vulnerabilidades conocidas (CVE)",
+          "severity": "HIGH",
+          "line": "34-38",
+          "description": "La versión 2.9.8 de jackson-databind tiene varias vulnerabilidades conocidas, incluyendo CVE-2022-42003 y CVE-2022-42004.",
+          "recommendation": "Actualizar a la versión más reciente de jackson-databind para mitigar estas vulnerabilidades.",
+          "code_correction_suggested": "<dependency>\n    <groupId>com.fasterxml.jackson.core</groupId>\n    <artifactId>jackson-databind</artifactId>\n    <version>2.15.2</version>\n</dependency>",
+          "cve_id": "CVE-2022-42003, CVE-2022-42004",
+          "impact": "Permite a un atacante ejecutar código remoto o realizar ataques de inyección de código.",
+          "dependency": "jackson-databind"
+        }
+      ],
+      "security_score": "3",
+      "summary": "El archivo POM presenta una dependencia con vulnerabilidades conocidas (CVE) y una versión desactualizada de jackson-databind. No se encontraron otras vulnerabilidades críticas, pero se recomienda revisar regularmente las dependencias y mantenerlas actualizadas para evitar riesgos de seguridad.",
+      "outdated_dependencies": [
+        {
+          "dependency": "jackson-databind",
+          "current_version": "2.9.8",
+          "latest_version": "2.15.2",
+          "security_risk": "HIGH"
+        }
+      ],
+      "file_type": "pom"
+    }
+  }
+}
