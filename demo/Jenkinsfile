@@ -219,7 +219,7 @@ pipeline {
                 reportFiles: 'ai-analysis-report.html',
                 reportName: 'AI Security & Quality Report',
                 reportTitles: 'AI-Powered Code Analysis',
-                allowUnsafeInline: true 
+                includes: '**/*'
             ])
 
             sh 'echo "Ruta actual artifacts"'
