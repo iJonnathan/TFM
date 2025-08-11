@@ -218,7 +218,8 @@ pipeline {
                 reportDir: env.SCAN_RESULTS_DIR,
                 reportFiles: 'ai-analysis-report.html',
                 reportName: 'AI Security & Quality Report',
-                reportTitles: 'AI-Powered Code Analysis'
+                reportTitles: 'AI-Powered Code Analysis',
+                allowUnsafeInline: true 
             ])
 
             sh 'echo "Ruta actual artifacts"'
