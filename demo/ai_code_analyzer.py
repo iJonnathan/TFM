@@ -59,7 +59,7 @@ Código a analizar:
 {code_content}
 ```
 
-Responde en formato JSON con la siguiente estructura:
+Responde exclusivamente en español y en formato JSON con la siguiente estructura:
 {{
     "vulnerabilities": [
         {{
@@ -104,7 +104,7 @@ Código a analizar:
 {code_content}
 ```
 
-Responde en formato JSON:
+Responde exclusivamente en español y en formato JSON con la siguiente estructura:
 {{
     "quality_issues": [
         {{
@@ -151,7 +151,7 @@ Contenido del POM:
 {pom_content}
 ```
 
-Responde en formato JSON con la siguiente estructura:
+Responde exclusivamente en español y en formato JSON con la siguiente estructura:
 {{
     "vulnerabilities": [
         {{
