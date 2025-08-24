@@ -37,10 +37,19 @@ public class WelcomeController {
     }
 
      @GetMapping("/logs")
-    public ResponseEntity<String> getLogFile(@RequestParam String filename) {
+    public ResponseEntity getLogFile(@RequestParam String filename) {
         try {
-            
-            Path filePath = Paths.get(BASE_DIRECTORY + filename);
+            // Validación del nombre del archivo
+            if (filename == null || filename.isEmpty() || filename.contains("..") || filename.contains("/")) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Error: Nombre de archivo inválido.");
+            }
+
+            Path filePath = Paths.get(BASE_DIRECTORY, filename);
+
+            // Validación adicional: verificar que el archivo esté dentro del directorio base
+            if (!filePath.normalize().startsWith(Paths.get(BASE_DIRECTORY).normalize())) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Error: Acceso no autorizado.");
+            }
 
             String content = new String(Files.readAllBytes(filePath));
             return ResponseEntity.ok(content);
