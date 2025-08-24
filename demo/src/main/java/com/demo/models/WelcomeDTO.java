@@ -3,6 +3,9 @@ package com.demo.models;
 public class WelcomeDTO {
     private String message;
     public WelcomeDTO(String message) {
+        if (message == null) {
+            throw new IllegalArgumentException("Message cannot be null");
+        }
         this.message = message;
     }
 
