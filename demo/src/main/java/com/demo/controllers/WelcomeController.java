@@ -36,10 +36,16 @@ public class WelcomeController {
         return new WelcomeDTO("Hola, bienvenido " +name + ", esto es un demo");
     }
 
-     @GetMapping("/logs")
-    public ResponseEntity<String> getLogFile(@RequestParam String filename) {
+    @GetMapping("/logs")
+    public ResponseEntity getLogFile(@RequestParam String filename) {
+        // Lista blanca de nombres de archivo permitidos
+        List allowedFiles = Arrays.asList("app.log", "debug.log", "error.log");
+
+        if (!allowedFiles.contains(filename)) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Error: Nombre de archivo no válido.");
+        }
+
         try {
-            
             Path filePath = Paths.get(BASE_DIRECTORY + filename);
 
             String content = new String(Files.readAllBytes(filePath));
