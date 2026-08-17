@@ -1,0 +1,17 @@
+# Core
+workflow-aggregator:latest
+git:latest
+github:latest
+
+# Configuración como Código
+configuration-as-code:latest
+job-dsl:latest
+
+# UI y Visualización
+pipeline-stage-view:latest
+pipeline-graph-analysis:latest
+blueocean:latest
+
+# Utilidades
+htmlpublisher:latest
+pipeline-utility-steps:latest

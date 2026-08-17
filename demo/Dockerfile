@@ -1,20 +1,19 @@
-# Dockerfile (ubicado en la raíz del repositorio TFM/)
-FROM openjdk:17-jdk-slim AS build
+# Dockerfile para la aplicación Spring Boot
 
-# Argumento para la ruta de la dependencia Maven dentro del contexto de construcción.
-# Esto hace que el Dockerfile sea más flexible si la estructura de carpetas cambia.
-ARG DEPENDENCY=demo/target
+# Imagen base con Java 17
+FROM eclipse-temurin:17-jdk-jammy
 
+# Argumento para la ruta del JAR
+ARG JAR_FILE=demo/target/*.jar
 
-# Crear un volumen para la aplicación
-VOLUME /tmp
+# Directorio de trabajo
+WORKDIR /app
 
-# Copiar el archivo JAR de la aplicación desde la ubicación construida por Maven.
-# La ruta 'demo/target/demo-0.0.1-SNAPSHOT.jar' es relativa al contexto de construcción (.).
-COPY ${DEPENDENCY}/demo-0.0.1-SNAPSHOT.jar app.jar
+# Copia el JAR a la imagen
+COPY ${JAR_FILE} app.jar
 
-# Exponer el puerto en el que la aplicación Spring Boot escuchará
+# Expone el puerto de la aplicación
 EXPOSE 9090
 
-# Punto de entrada para ejecutar la aplicación.
-ENTRYPOINT ["java","-jar","/app.jar"]
+# Comando de ejecución
+ENTRYPOINT ["java","-jar","app.jar"]

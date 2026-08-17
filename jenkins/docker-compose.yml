@@ -1,0 +1,22 @@
+services:
+  jenkins:
+    build: .
+    image: ${IMAGE_NAME}
+    container_name: ${CONTAINER_NAME}
+    restart: always
+    ports:
+      - "8080:8080"
+      - "50000:50000"
+    volumes:
+      - jenkins_data:/var/jenkins_home
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      - JENKINS_ADMIN_PASSWORD=${JENKINS_ADMIN_PASSWORD}
+      - JAVA_OPTS=${JAVA_OPTS}
+      - PIPELINE_NAME=${PIPELINE_NAME}
+      - REPO_URL=${REPO_URL}
+      - BRANCH=${BRANCH}
+      - JENKINSFILE_PATH=${JENKINSFILE_PATH}
+
+volumes:
+  jenkins_data:

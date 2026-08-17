@@ -1,4 +1,0 @@
-demo/src/test/java/com/demo/controller/WelcomeControllerTests.java
-demo/src/main/java/com/demo/controllers/WelcomeController.java
-demo/src/main/java/com/demo/DemoApplication.java
-demo/src/main/java/com/demo/models/WelcomeDTO.java
